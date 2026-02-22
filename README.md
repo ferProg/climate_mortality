@@ -1,182 +1,141 @@
-# Heat, Calima and Weekly Mortality — Santa Cruz de Tenerife (2016–2025)
+# Heat & Weekly Mortality — Santa Cruz de Tenerife (2016–2025)
 
-This project studies how **weather (AEMET)** and **Saharan dust / particulate pollution (PM10/PM2.5)** relate to **weekly mortality**.
+This project studies the relationship between **weekly mortality (INE)** and **weather (AEMET)** in the province of **Santa Cruz de Tenerife (Canary Islands, Spain)**.  
+The repository is organized as a reproducible workflow: **scripts → datasets**, **notebooks → analysis**, **reports → figures/tables**.
 
-It is designed as a reproducible pipeline: **scripts build datasets**, **notebooks analyze them**, and **reports** store the publication-ready outputs.
+> Status: the repository is not public yet. **Datasets (CSV/JSON)** are intentionally **not versioned/published** (see *Data & privacy / Git*).
 
----
 
 ## Research questions
 
-1) **Heat / weather vs mortality (weekly)**  
-   - Are hotter weeks associated with higher mortality?
-   - Do effects appear with delays (lags)?
+### 1) Weather / heat vs weekly mortality (2016–2025)
+- Do hotter weeks associate with higher weekly mortality?
+- Is the relationship linear, or concentrated in extremes (tail risk)?
+- Are there short lags (0–2 weeks)?
 
-2) **Calima / PM episodes vs mortality (weekly)**  
-   - Do dust episodes (PM peaks, coarse fraction) show association with mortality?
+### 2) Dust / calima vs mortality (planned)
+- Dust/PM and official alerts (CAP) will be analyzed in a separate notebook once the weather-only block is finalized.
 
-3) **Combined model**  
-   - When controlling for weather + seasonality, does calima add explanatory power?
-
----
 
 ## Data sources
 
-- **AEMET OpenData**: daily climatological values for station **C429I (Tenerife Sur airport)**  
-  Variables include: tmed, tmax, tmin, precipitation, humidity, pressure, wind, etc.
+- **INE (EDeS)**: weekly mortality, filtered to province **38 (Santa Cruz de Tenerife)**.
+- **AEMET**: meteorological variables aggregated to weekly level (station **C429I – Tenerife Sur**), including:
+  - `tmed_mean`, `tmax_mean`, `tmax_max`, `tmin_mean`, `tmin_min`
+  - `prec_sum`, `hr_mean`, `presmax_mean`, `presmin_mean`
+  - `wind_mean`, `gust_max`, `sun_sum`
 
-- **INE**: weekly deaths (EDeS) filtered to **province 38: Santa Cruz de Tenerife**, period encoded as `YYYYSMWW`.
+*(BDRC / AEMET Dust THREDDS access requested; pending.)*
 
-- **Canary Islands Air Quality Network**: hourly air quality tables (annual workbooks), station used here for PM series:
-  - **Mercado Central (Gran Canaria)** as a **regional proxy** for dust episodes, with PM10 and PM2.5 available for **2016–2024** (validated yearly files).
-
-> Note: PM data currently covers **2016–2024** (validated annual packages).  
-> Mortality + AEMET weather cover **2016–2025**.
-
----
 
 ## Project structure
-heat_mortality_tenerife/
+
+```
+heat_mortality_analysis/
 ├── data/
-│ ├── raw/ # downloads as-is (do not edit)
-│ ├── interim/ # partially cleaned (daily, standardized)
-│ └── processed/ # final weekly datasets used for EDA/modeling
-├── logs/ # download + sanity checks (row counts, coverage)
-├── src/ # reproducible pipeline scripts
-├── notebooks/ # exploration & figures (reads processed/ only)
+│   ├── raw/
+│   ├── interim/
+│   └── processed/
+├── logs/
+├── notebooks/
 ├── reports/
-│ ├── figures/ # plots for publication
-│ └── tables/ # summary tables
-├── README.md
-└── requirements.txt
+│   ├── figures/
+│   │   └── eda01/
+│   └── tables/
+│       └── eda01/
+└── src/
+    └── utils/
+```
 
 
----
+## Outputs
 
-## Outputs (what this repo produces)
+### Notebook 01 (weather vs mortality)
+- Figures: `reports/figures/eda01/`
+- Tables: `reports/tables/eda01/`
 
-### Core weekly datasets
-- `data/processed/tfe_deaths_weather_weekly_2016_2025_C429I.csv`  
-  Weekly mortality merged with weekly weather.
+### Local datasets (not versioned)
+- `data/raw/tfe_deaths_weather_weekly_2016_2025_C429I.csv`  
+  Weekly deaths + weekly weather (2016–2025).
 
-- `data/processed/calima_pm_daily_2016_2024_mercado_central.csv`  
-  Daily PM aggregates + episode flags.
-
-- `data/processed/calima_pm_weekly_2016_2024_mercado_central_episodes.csv`  
-  Weekly PM features including:
-  - `calima_days_peak80` (main calima metric)
-  - `calima_days_peak100`
-  - `calima_days_coarse20`, `calima_days_coarse40max`
-  - `pm10_max_week`, `coarse_max_week`, etc.
-
-### Final merged dataset (produced later)
-- `data/processed/tfe_deaths_weather_calima_weekly_2016_2024.csv`  
-  Weekly mortality + weather + calima/PM features.
-
----
 
 ## Reproducible pipeline (scripts)
 
-Scripts are numbered; run in order. Each script writes to `data/*` and logs checks to `logs/`.
+**Convention:** numbered scripts under `src/`.  
+Scripts were renumbered following a single linear pipeline (“Option A”) to avoid confusing duplicates (e.g., multiple `01_...` files).
 
-### `src/01_ingest_aemet.py`
-Downloads AEMET daily climatological values for station `C429I` (Tenerife Sur) for 2016–2025.
+- `src/01_ingest_ine.py`  
+  Ingests INE weekly deaths and standardizes `week_start`.
 
-**Produces:**
-- `data/raw/aemet_C429I_daily_2016_2025.csv`
+- `src/06_aggregate_weather_weekly.py`  
+  Aggregates AEMET weather variables to weekly level and computes coverage.
 
-### `src/01_ingest_ine.py`
-Loads INE EDeS weekly deaths for Santa Cruz de Tenerife and converts `YYYYSMWW → week_start (Monday)`.
+- `src/08_merge_deaths_weather.py`  
+  Merges weekly deaths and weekly weather into a single table.
 
-**Produces:**
-- `data/raw/ine_deaths_sc_weekly_2016_2025.csv`
+*(Dust-related scripts exist but are out of scope for Notebook 01 and will be used in Notebook 02.)*
+- `src/03_ingest_aemet_cap_alerts.py`
+- `src/04_ingest_air_quality.py`
+- `src/05_build_cap_weekly_flags.py`
+- `src/07_aggregate_pm_daily_weekly.py`
+- `src/09_build_master_weekly_2018_2024.py`
 
-### `src/02_clean_standardize.py`
-Standardizes numeric formats, dates, column names, and removes obviously non-data rows.
 
-**Produces:**
-- `data/interim/aemet_C429I_daily_clean.csv`
-- `data/interim/ine_deaths_weekly_clean.csv`
+## Notebooks
 
-### `src/03_aggregate_weekly.py`
-Aggregates daily → weekly for AEMET and computes weekly coverage.
+- `notebooks/01_eda_climate_vs_mortality.ipynb`  
+  **Weather-only EDA (2016–2025)**:
+  - Seasonality adjustment via weekly baseline (`deaths_excess`)
+  - Rolling smoothing (3-week) for episode visualization
+  - QA filtering of physically implausible weather weeks
+  - Tail analysis (p95/p99 “heat weeks”) to capture non-linear effects
 
-**Produces:**
-- `data/processed/aemet_C429I_weekly_2016_2025.csv`
+- `notebooks/02_eda_calima_vs_mortality.ipynb` *(planned)*  
+  Dust/PM + CAP alerts vs mortality, including lags and interaction with heat.
 
-### `src/04_merge_weather_mortality.py`
-Merges INE weekly deaths with AEMET weekly weather.
+> Rule of thumb: notebooks **read** prepared datasets and **write** outputs to `reports/`. Core ingestion/processing happens in `src/`.
 
-**Produces:**
-- `data/processed/tfe_deaths_weather_weekly_2016_2025_C429I.csv`
 
-### `src/01_ingest_air_quality.py`
-Reads annual air-quality workbooks and extracts the station sheet (Mercado Central). Standardizes hourly PM10/PM2.5.
+## Data quality notes
 
-**Produces:**
-- `data/interim/pm_hourly_mercado_central_2016_2024.csv`
+During EDA01, **14/521 weeks (~2.7%)** in the 2016–2025 deaths+weather weekly dataset were flagged as **physically implausible** (e.g., `tmax_mean < tmin_mean`, pressure outside 900–1100 hPa, extreme gust values).  
+For analysis, we created a `df_clean` excluding those weeks and recomputed seasonality baselines.
 
-### `src/03_aggregate_pm_daily_weekly.py`
-Builds daily and weekly PM features + calima episode flags.
+**Pending:** fix the root cause in the weekly aggregation/merge scripts so the dataset is clean by construction (not just cleaned in-notebook).
 
-**Produces:**
-- `data/processed/calima_pm_daily_2016_2024_mercado_central.csv`
-- `data/processed/calima_pm_weekly_2016_2024_mercado_central_episodes.csv`
 
-### `src/05_merge_all.py` (later)
-Merges weekly mortality+weather with weekly calima PM features (2016–2024 overlap).
+## Key findings so far (EDA01)
 
-**Produces:**
-- `data/processed/tfe_deaths_weather_calima_weekly_2016_2024.csv`
+- Linear correlation between `deaths_excess` and weekly temperature is near zero, suggesting a **non-linear** relationship.
+- Extreme heat weeks show higher mean excess mortality (illustrative, not causal):
+  - `tmax_mean ≥ p95` → mean excess ~ **+7.7 deaths/week** (n≈26)
+  - `tmax_mean ≥ p99` → mean excess ~ **+22.3 deaths/week** (n≈6)  
+  *(Interpret with caution due to small sample sizes at p99.)*
+- March 2020 peaks appear inconsistent with heat (likely non-climatic shocks), reinforcing the need to control for structural events in later modeling.
 
----
 
-## Notebooks (analysis only)
+## How to run (local)
 
-Notebooks read from `data/processed/` and write figures/tables to `reports/`.
+1) Create/activate your environment and install dependencies.
+2) Run the pipeline scripts for ingestion/aggregation/merge.
+3) Open notebooks to reproduce EDA and write outputs to `reports/`.
 
-- `notebooks/01_eda_climate_vs_mortality.ipynb`
-- `notebooks/02_eda_calima_vs_mortality.ipynb`
-- `notebooks/03_eda_merged.ipynb`
+*(Exact commands will be finalized once dependency pinning and run order are fully stabilized.)*
 
-Rule: **No downloading or core cleaning in notebooks.**
 
----
+## Data & privacy / Git
 
-## How to run
+- This repo intentionally **does not publish datasets**:
+  - `data/raw/`, `data/interim/`, `data/processed/`
+  - `*.csv` (globally ignored)
+- Recommended publishable artifacts: **figures** (PNG) and non-sensitive summary tables.
 
-### 1) Create environment
-'''
-python -m venv .venv
-# Windows
-.venv\Scripts\activate
-pip install -r requirements.txt
-python src/01_ingest_aemet.py
-python src/01_ingest_ine.py
-python src/02_clean_standardize.py
-python src/03_aggregate_weekly.py
-python src/04_merge_weather_mortality.py
+> Note: `.gitignore` prevents tracking of new files, but files committed earlier must be removed from tracking with `git rm --cached`.
 
-python src/01_ingest_air_quality.py
-python src/03_aggregate_pm_daily_weekly.py
 
-python src/05_merge_all.py
-'''
+## Next steps
 
-### Notes on methodology (current decisions)
+1) Implement QA rules in the processing pipeline (notebook-independent).
+2) Build Notebook 02 (dust/PM/CAP) with the same QA → seasonality → tail/lag approach.
+3) Compare contributions of heat vs dust and assess confounding/interaction.
 
-Weekly alignment: weeks start on Monday (week_start) for consistent merges.
-
-Calima main metric: daily peak episodes aggregated to weekly:
-
-calima_days_peak80 = number of days/week with PM10_max_day ≥ 80 µg/m³ (main).
-
-Also kept as secondary:
-
-WHO / EU / ICA thresholds based on PM10 daily mean.
-
-Coarse fraction proxies (PM10 − PM2.5) to better isolate dust vs urban fine aerosols.
-
-## Contact / license
-
-This is an open research-style project. If you reuse the pipeline or results, cite the data sources and this repository.
