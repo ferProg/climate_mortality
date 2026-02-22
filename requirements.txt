@@ -1,0 +1,13 @@
+pandas
+
+numpy
+
+requests
+
+openpyxl
+
+matplotlib
+
+statsmodels (optional, for time-series/regression)
+
+scikit-learn (optional)

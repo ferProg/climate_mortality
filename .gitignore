@@ -30,5 +30,6 @@ data/raw/
 data/interim/
 data/processed/
 **/*.csv
+*.json
 
 # If you want to keep empty dirs tracked, add a .gitkeep file inside them
