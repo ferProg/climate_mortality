@@ -1,1 +1,0 @@
-Legacy Tenerife-only pipeline (GCXO/GCTS). Kept for reproducibility and comparisons.

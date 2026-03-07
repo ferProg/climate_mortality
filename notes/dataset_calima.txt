@@ -1,0 +1,101 @@
+07/-3/26
+construir una variable operacional, transparente y defendible, basada en la convergencia de proxies. -> para medir calima.
+
+
+Fuentes de AEMET y trabajos sobre la Saharan Air Layer (SAL) en Tenerife describen la intrusión sahariana como una masa de aire cálida y seca, situada sobre una capa marina más fría y húmeda, con inversión térmica entre ambas. En el escenario de invierno-SAL sobre Tenerife, Barreto et al. describen una anomalía seca en niveles bajos de la capa de polvo.
+
+La parte importante es esta: la relación con humedad existe, pero no siempre se verá limpia en una media semanal de superficie. El mismo estudio muestra que verticalmente la SAL puede ser más seca en su base y, en ciertos contextos, más húmeda que la troposfera libre circundante en capas más altas. O sea: la señal de humedad es real, pero más compleja que “calima = humedad baja” en una sola serie superficial.
+
+Presión
+
+La evidencia externa apunta a que los episodios de polvo sahariano sobre Canarias y el oeste euro-mediterráneo suelen estar asociados a patrones de alta presión/bloqueo y dorsales subtropicales favorables al transporte de polvo. El paper de 2024 de Cuevas-Agulló et al. vincula estos episodios con enhanced activity of high-pressure systems y configuraciones de bloqueo.
+
+Pero eso no convierte a la presión superficial semanal local en un gran detector de calima. La presión parece ser más útil para explicar el patrón atmosférico que permite la intrusión, no tanto para identificar por sí sola si una semana concreta fue de calima fuerte en Santa Cruz.
+
+Traducción práctica para tu proyecto
+
+Yo las trataría así:
+
+Humedad relativa: sí meterla, pero como variable auxiliar o componente de score con peso moderado.
+
+Presión: solo meterla si ya la tienes limpia y como variable exploratoria/contextual, no como eje central del score.
+
+Proxies más fuertes para calima semanal: PM10 primero; luego visibilidad y temperatura; después humedad; y por detrás presión. Esto encaja con la literatura sobre episodios intensos de polvo en Canarias, que destaca sobre todo los aumentos extremos de PM y la estructura cálida-seca de la intrusión.
+
+En una frase: humedad, sí; presión, bastante menos. Para tu dataset calima, yo priorizaría humedad antes que presión.
+
+Mi ranking de fuerza para detectar calima semanal
+
+Ahora mismo, con lo que tienes, yo pondría:
+
+1.PM10
+
+2. visibilidad / low_vis
+
+3. PM2.5
+
+4. tmax_c_mean
+
+5. humidity_mean
+
+6. pressure_hpa_mean
+
+6. wind_ms_mean
+
+7. prec_sum
+
+VAMOS ANALIZANDO VARIABLE POR VARIABLE:
+variable por variable, pero en este orden:
+PM10 → temperatura → humedad → visibilidad → presión.
+
+PM10 muestra una separación fuerte y consistente frente a CAP polvo amarillo+ y frente a DAI válido, por lo que debe considerarse el principal indicador cuantitativo en la construcción de la variable semanal de calima.
+
+En esta escala semanal y en esta construcción de datos, la temperatura está demasiado mezclada con estacionalidad y otros patrones como para servir como indicador operativo principal.
+
+humidity_mean entra como variable útil de apoyo en la definición de calima semanal.
+
+low_vis_any_week entra clarísimamente.
+
+
+
+
+Versión formal para el README.md
+
+La variable calima_proxy_score_v2 se ha construido como un índice heurístico basado en proxies semanales disponibles en el dataset maestro de Tenerife. La motivación de este enfoque es que la calima no está observada de forma homogénea y continua en toda la serie temporal, mientras que variables como CAP y DAI presentan cobertura parcial o discontinuidades temporales. Por ello, el score no utiliza CAP ni DAI como definidores directos de calima, sino como referencias externas orientativas para evaluar si la combinación de proxies reproduce razonablemente las semanas con señal de polvo sahariano.
+
+Los componentes incluidos en calima_proxy_score_v2 son los siguientes:
+
+PM10 alto: componente principal del score.
+
++1 si PM10 está por encima del percentil 90 de la serie.
+
++1 adicional si PM10 está por encima del percentil 95.
+
+Humedad relativa baja (humidity_mean):
+
++1 si la humedad semanal está por debajo del percentil 25.
+
+Baja visibilidad (low_vis_any_week):
+
++1 si en esa semana existe señal de baja visibilidad.
+
+Presión atmosférica relativamente alta (pressure_hpa_mean):
+
++0.5 si la presión semanal está por encima del percentil 75.
+Este componente se ha incluido con peso reducido, ya que su capacidad discriminante fue menor que la de PM10, humedad y visibilidad, pero puede aportar algo de contexto sinóptico.
+
+El score continuo se transforma después en una variable categórica ordinal calima_proxy_level_v2 con cuatro niveles:
+
+no_calima
+
+possible
+
+probable
+
+intense
+
+Esta clasificación debe interpretarse como una aproximación operativa de intensidad, no como una observación oficial del fenómeno. En consecuencia, calima_proxy_score_v2 y calima_proxy_level_v2 son adecuados para exploración, EDA y análisis epidemiológico preliminar, pero deben entenderse como construcciones analíticas basadas en convergencia de proxies y no como etiquetas meteorológicas definitivas.
+
+Nota metodológica importante
+
+CAP y DAI no se utilizaron para construir directamente el score, sino para comprobar su coherencia externa en los periodos con datos disponibles. Esto evita depender de fuentes con cobertura incompleta en toda la serie y permite disponer de una variable semanal de calima utilizable también en intervalos sin CAP o sin DAI.
