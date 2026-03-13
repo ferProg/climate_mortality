@@ -1,3 +1,29 @@
+# Construye el dataset master semanal de una isla (o de todas) uniendo
+# las fuentes procesadas del proyecto por week_start.
+#
+# Qué hace:
+# 1) Localiza automáticamente los archivos de entrada más recientes para:
+#    deaths, weather, visibility, air_quality, cap y Heliyon.
+# 2) Valida que cada feed tenga week_start limpio, sin nulos ni duplicados.
+# 3) Normaliza week_start y selecciona las columnas útiles de cada fuente.
+# 4) Crea un calendario semanal fijo para el periodo de análisis.
+# 5) Filtra deaths al rango del análisis y hace left-merge sucesivo con:
+#    weather, visibility, air_quality, cap y Heliyon.
+# 6) Añade metadatos de isla, código y año.
+# 7) Valida que el master final tenga exactamente una fila por semana.
+# 8) Guarda el parquet final en data/processed/<island>/master/.
+#
+# Nota:
+# - El rango de análisis está fijado dentro del script.
+# - CAP puede quedar con NaN al inicio si la fuente empieza más tarde.
+# - Visibility se lee desde data/interim/<island>/visibility/step4_weekly/.
+
+# Heliyon/calima is treated as a general Canarias-wide weekly feed,
+# shared across all islands. It is read from:
+# data/processed/calima/calima_general_weekly.parquet
+# and merged by week_start into each island master dataset.
+
+
 from __future__ import annotations
 
 import argparse
@@ -128,7 +154,7 @@ def build_paths(island: str, processed_dir: Path, interim_dir: Path) -> Dict[str
             f"cap_weekly_{code}_*.parquet",
             "cap",
         ),
-        "heliyon": interim_dir / "heliyon" / f"heliyon_calima_dai_flag_weekly_{code}_2015w52_2024.parquet",
+        "heliyon": processed_dir / "calima" / "calima_general_weekly.parquet",
     }
 
     missing = [k for k, v in paths.items() if not Path(v).exists()]
@@ -153,21 +179,19 @@ def select_cap_columns(df: pd.DataFrame) -> pd.DataFrame:
         raise ValueError(f"cap feed missing expected columns: {missing}")
     return df[wanted].copy()
 
-
 def select_heliyon_columns(df: pd.DataFrame, calendar: pd.DataFrame) -> pd.DataFrame:
-    wanted = ["week_start", "calima_dai_flag"]
+    wanted = ["week_start", "calima_canarias_dai_week", "calima_canarias_level_week"]
     missing = [c for c in wanted if c not in df.columns]
     if missing:
         raise ValueError(f"heliyon feed missing expected columns: {missing}")
 
-    out = df[wanted].copy()
-    out["calima_dai_flag"] = out["calima_dai_flag"].astype("string")
+    out = df[wanted].copy().rename(columns={
+        "calima_canarias_dai_week": "calima_dai_flag",
+        "calima_canarias_level_week": "calima_level_week",
+    })
 
-    # Merge to full calendar and fill no-data weeks as blue.
     out = calendar[["week_start"]].merge(out, on="week_start", how="left")
-    out["calima_dai_flag"] = out["calima_dai_flag"].fillna("blue")
     return out
-
 
 def prepare_generic_feed(df: pd.DataFrame, source_name: str) -> pd.DataFrame:
     """
@@ -297,24 +321,26 @@ def build_master(island: str, processed_dir: Path, interim_dir: Path) -> Path:
     print("Null counts (selected columns):")
 
     selected = [
-        c
-        for c in [
-            "deaths_week",
-            "PM10",
-            "PM2.5",
-            "temp_c_mean",
-            "SO2",
-            "NO2",
-            "O3",
-            "pressure_hpa_mean",
-            "cap_heat_yellow_plus_week",
-            "cap_dust_yellow_plus_week",
-            "calima_dai_flag",
-            "low_vis_any_week",
-            "vis_min_m_week",
-        ]
-        if c in master.columns
+    c
+    for c in [
+        "deaths_week",
+        "PM10",
+        "PM2.5",
+        "temp_c_mean",
+        "SO2",
+        "NO2",
+        "O3",
+        "pressure_hpa_mean",
+        "cap_heat_yellow_plus_week",
+        "cap_dust_yellow_plus_week",
+        "calima_dai_flag",
+        "calima_level_week",
+        "low_vis_any_week",
+        "vis_min_m_week",
     ]
+    if c in master.columns
+    ]
+    
     if selected:
         print(master[selected].isna().sum())
     else:

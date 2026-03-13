@@ -1,0 +1,4 @@
+perro
+caca
+gata 
+chocho

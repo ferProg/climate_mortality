@@ -21,6 +21,28 @@ Notes:
 - Tenerife: recommended to use only GCTS (TFS) to avoid TFN fog noise.
 """
 
+# Pipeline completo de visibilidad/calima por aeropuertos para una isla.
+#
+# Flujo:
+# 1) Descarga y parsea archivos NOAA ISD anuales para las estaciones/aeropuertos.
+# 2) Construye una serie diaria por estación cerca de la hora objetivo UTC.
+# 3) Combina estaciones y genera flags diarios a nivel isla.
+# 4) Agrega la serie diaria insular a frecuencia semanal (week_start = lunes).
+#
+# Entradas principales:
+# - isla
+# - start_date / end_date
+# - estaciones ICAO opcionales
+#
+# Salidas:
+# - step1_yearly: parquets anuales parseados + manifest
+# - step2_daily: serie diaria por estación
+# - step3_daily: serie diaria insular con flags
+# - step4_weekly: serie semanal final de visibilidad
+#
+# Nota:
+# Si no se pasan estaciones manualmente, usa las definidas en AIRPORTS_BY_ISLAND.
+
 from __future__ import annotations
 import logging
 import argparse

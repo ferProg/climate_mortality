@@ -1,4 +1,38 @@
 # src/ingests/cap/extract_canarias_avisos_by_island.py
+# Extrae avisos CAP de AEMET para una isla canaria a partir del dataset
+# particionado de Canarias y construye un dataset semanal de alertas.
+#
+# Qué hace:
+# 1) Lee el dataset parquet particionado de avisos CAP de Canarias.
+# 2) Normaliza el nombre de la isla recibido por CLI.
+# 3) Filtra los avisos de la isla:
+#    - primero intenta usar la columna has_<isla> si es informativa
+#    - si no, cae a un filtro por areaDesc.
+# 4) Convierte onset/onset_dt a datetime UTC y aplica filtro de fechas.
+# 5) Deriva variables de fenómeno:
+#    - is_dust_event
+#    - is_heat_event
+#    a partir de event/headline.
+# 6) Convierte severity textual a level_score numérico:
+#    minor=1, moderate=2, severe=3, extreme=4
+# 7) Agrega por semana (lunes) para obtener:
+#    - cap_heat_level_max_week
+#    - cap_heat_yellow_plus_week
+#    - cap_dust_level_max_week
+#    - cap_dust_yellow_plus_week
+#    - cap_coverage_week
+# 8) Opcionalmente guarda también el parquet de avisos filtrados.
+# 9) Guarda el weekly final en data/processed/<island>/cap/.
+#
+# Salidas:
+# - cap_alerts_<code>_<tag>.parquet   (opcional)
+# - cap_weekly_<code>_<startyear>_<endyear>.parquet
+#
+# Nota:
+# - Si se pasan --start y --end, el weekly se calendariza a todas las semanas
+#   del rango observado entre min y max week_start.
+# - week_start se deja tz-naive para facilitar merges posteriores.
+
 from __future__ import annotations
 
 import argparse

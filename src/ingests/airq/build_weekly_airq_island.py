@@ -1,3 +1,19 @@
+# Construye el dataset semanal de calidad del aire para una isla a partir del daily.
+#
+# Lógica:
+# 1) Lee el CSV diario insular (daily_<codigo>.csv).
+# 2) Valida que exista una sola fila por fecha y que no falten columnas clave.
+# 3) Convierte cada fecha a week_start (lunes de la semana).
+# 4) Agrega por semana calculando la media semanal de:
+#       PM10, PM2.5, SO2, NO2, O3
+# 5) Añade control de cobertura:
+#       - days_with_pm10
+#       - days_missing_pm10
+# 6) Guarda el resultado en parquet dentro de data/processed/<island>/air_quality/
+#
+# Salida:
+# - weekly_<codigo_isla>_<start_year>_<end_year>.parquet
+
 from __future__ import annotations
 
 import argparse

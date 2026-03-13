@@ -12,4 +12,4 @@ cap_heat_level_max_week, cap_heat_yellow_plus_week
 
 cap_dust_level_max_week, cap_dust_yellow_plus_week
 
-sin_doy, cos_doy (para estacionalidad)
+sin_doy, cos_doy (para estacionalidad)d

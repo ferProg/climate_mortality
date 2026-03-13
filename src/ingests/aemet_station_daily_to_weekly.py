@@ -1,3 +1,32 @@
+# Este script descarga datos diarios de una estación AEMET usando OpenData
+# para una isla y un rango de fechas dados.
+#
+# Qué hace:
+# 1. Recibe por argumentos: estación, fechas, isla y formato de salida.
+# 2. Crea carpetas siguiendo la estructura del proyecto:
+#       data/raw/<island>/weather/
+#       data/processed/<island>/weather/
+#       logs/<island>/
+# 3. Descarga los datos diarios de AEMET por tramos de fechas ("chunks")
+#    para evitar errores o límites de la API.
+# 4. Normaliza tipos:
+#       - fecha -> datetime
+#       - columnas numéricas con coma decimal -> float
+# 5. Guarda el dataset diario crudo en data/raw.
+# 6. Agrega el diario a frecuencia semanal (week_start = lunes ISO).
+# 7. Calcula métricas semanales de temperatura, humedad, presión, viento,
+#    precipitación, número de días con datos y coverage.
+# 8. Guarda el dataset semanal procesado en data/processed.
+#
+# Salidas:
+# - raw daily:     weather_daily_<code>_<station>_<start>_<end>.parquet/csv
+# - weekly merged: weather_weekly_<code>_<startyear>_<endyear>.parquet/csv
+#
+# Nota:
+# El weekly NO incluye el código de estación en el nombre del archivo,
+# así que si corres varias estaciones para la misma isla y periodo,
+# podrías sobreescribir la salida procesada.
+
 from __future__ import annotations
 
 import argparse
@@ -6,7 +35,7 @@ import time
 import random
 from datetime import date, datetime, timedelta
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, Tuple
 import logging
 import pandas as pd
 import requests

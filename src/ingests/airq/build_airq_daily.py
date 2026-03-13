@@ -1,3 +1,23 @@
+# Construye un dataset diario insular de calidad del aire a partir de los Excel anuales
+# de Canarias, recorriendo una lista priorizada de estaciones por isla.
+#
+# Lógica:
+# 1) Para cada año, abre el Excel "Datos YYYY.xlsx".
+# 2) Busca las hojas/estaciones asociadas a la isla según un diccionario de prioridad.
+# 3) Lee cada hoja válida, limpia fechas y contaminantes principales:
+#       PM10, PM2.5, SO2, NO2, O3
+# 4) Resume cada estación a nivel diario usando el máximo diario por contaminante.
+# 5) Para cada fecha, elige la primera estación de la lista que tenga PM10 disponible.
+#    Si una estación no tiene datos ese día, pasa a la siguiente.
+# 6) Devuelve una serie diaria insular con una sola fila por fecha y la estación elegida.
+#
+# Salida:
+# - daily_<codigo_isla>.csv
+#
+# Nota:
+# - La prioridad de estaciones está definida en STATIONS_BY_ISLAND.
+# - La estación usada puede cambiar de un día a otro si la prioritaria no tiene datos.
+
 from __future__ import annotations
 
 import argparse

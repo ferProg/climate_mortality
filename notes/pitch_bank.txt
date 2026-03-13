@@ -1,0 +1,17 @@
+45s version
+
+I’ve been working on a data project analysing how heat, Saharan dust events and air quality may relate to weekly mortality in Tenerife. I brought together official datasets from different sources, cleaned and merged them, and built a structured weekly dataset for analysis. The project helped me develop practical skills in data cleaning, feature engineering, exploratory analysis and producing reliable, reporting-ready data. What I like most about it is that it combines messy real-world data with a meaningful public health question.
+
+Easy recall version
+
+I’ve been working on a data project looking at how heat, dust events and air quality might relate to weekly mortality in Tenerife. I used official datasets from different sources, cleaned and merged them, and built a weekly dataset for analysis. It’s been really useful for developing my skills in data cleaning, feature engineering and turning messy real-world data into reliable reporting-ready outputs.
+
+4 anchor points
+
+Heat, dust, air quality, mortality in Tenerife
+
+Official datasets from different sources
+
+Cleaned, merged, weekly dataset
+
+Data cleaning, feature engineering, reporting-ready outputs
