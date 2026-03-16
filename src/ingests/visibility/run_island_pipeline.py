@@ -62,13 +62,20 @@ LOGGER = logging.getLogger(__name__)
 
 # after: island = norm(args.isla)
 ISLAND_ALIAS = {
-    "el_hierro": "hierro",
-    "la_gomera": "gomera",
-    "la_palma": "la_palma",  # ya ok
-    "gran_canaria": "gran_canaria",
+    # canonical short forms
     "tenerife": "tenerife",
+    "gran_canaria": "gran_canaria",
     "lanzarote": "lanzarote",
     "fuerteventura": "fuerteventura",
+    "la_palma": "la_palma",
+    "gomera": "gomera",
+    "hierro": "hierro",
+
+    # accepted alternate inputs
+    "la_gomera": "gomera",
+    "el_hierro": "hierro",
+    "palma": "la_palma",
+    "grancanaria": "gran_canaria",
 }
 
 

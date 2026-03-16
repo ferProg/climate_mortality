@@ -7,7 +7,7 @@ from typing import Dict, Optional
 import pandas as pd
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]  # .../heat_mortality_analysis
+PROJECT_ROOT = Path(__file__).resolve().parents[2]  # .../climate_mortality
 DATA_DIR = PROJECT_ROOT / "data"
 
 RAW_DEATHS = DATA_DIR / "raw" / "deaths" / "ine_35178.csv"
@@ -20,6 +20,27 @@ ISLANDS: Dict[str, str] = {
     "lpa": "la_palma",
     "gom": "gomera",
     "hie": "hierro",
+}
+
+ALIASES: Dict[str, str] = {
+    "tfe": "tfe",
+    "tenerife": "tfe",
+    "gcan": "gcan",
+    "gran_canaria": "gcan",
+    "gran canaria": "gcan",
+    "lzt": "lzt",
+    "lanzarote": "lzt",
+    "ftv": "ftv",
+    "fuerteventura": "ftv",
+    "lpa": "lpa",
+    "la_palma": "lpa",
+    "palma": "lpa",
+    "gom": "gom",
+    "gomera": "gom",
+    "la_gomera": "gom",
+    "hie": "hie",
+    "hierro": "hie",
+    "el_hierro": "hie",
 }
 
 # INE columns
@@ -40,16 +61,11 @@ def parse_ine_week_to_monday(periodo: str) -> Optional[pd.Timestamp]:
     if len(p) < 7:
         return None
 
-    # Accept patterns like 2025SM01 / 2025W01 / 2025-SM01 (robust-ish)
-    year = None
-    week = None
-
     try:
         year = int(p[0:4])
     except Exception:
         return None
 
-    # find last 2 digits as week
     tail = p[-2:]
     if not tail.isdigit():
         return None
@@ -58,7 +74,6 @@ def parse_ine_week_to_monday(periodo: str) -> Optional[pd.Timestamp]:
     if week < 1 or week > 53:
         return None
 
-    # ISO week Monday
     try:
         import datetime as dt
 
@@ -82,6 +97,11 @@ def clean_total(x) -> Optional[float]:
         return None
 
 
+def normalize_code(raw: str) -> str:
+    key = str(raw).strip().lower()
+    return ALIASES.get(key, key)
+
+
 def build_one_island(df: pd.DataFrame, code: str, island_name: str, island_value: str) -> Optional[pd.DataFrame]:
     sub = df.loc[df[ISLAND_COL].astype(str).str.strip() == island_value].copy()
     if sub.empty:
@@ -90,25 +110,36 @@ def build_one_island(df: pd.DataFrame, code: str, island_name: str, island_value
 
     # Keep only "Dato base" if it exists (avoid rates/indices)
     if TYPE_COL in sub.columns:
-        # If multiple types exist, prefer 'Dato base'
         types = set(sub[TYPE_COL].astype(str).str.strip().unique())
         if "Dato base" in types:
             sub = sub.loc[sub[TYPE_COL].astype(str).str.strip() == "Dato base"].copy()
 
+    sub[PERIOD_COL] = sub[PERIOD_COL].astype(str).str.strip()
     sub["week_start"] = sub[PERIOD_COL].apply(parse_ine_week_to_monday)
-    sub = sub.dropna(subset=["week_start"])
+    sub = sub.dropna(subset=["week_start"]).copy()
 
+    # IMPORTANT: keep rows even when deaths_week is missing in raw.
+    # Some islands/weeks in INE come with blank Total cells.
     sub["deaths_week"] = sub[VALUE_COL].apply(clean_total)
-    sub = sub.dropna(subset=["deaths_week"])
 
+    # Keep one row per week as provided by source.
     weekly = (
-        sub.groupby("week_start", as_index=False)["deaths_week"]
-        .sum()
+        sub[["week_start", "deaths_week"]]
+        .drop_duplicates(subset=["week_start"], keep="first")
         .sort_values("week_start")
         .reset_index(drop=True)
     )
 
+    # Calendarize full weekly range so missing weeks remain explicit rows with NaN.
+    full_calendar = pd.DataFrame(
+        {"week_start": pd.date_range(weekly["week_start"].min(), weekly["week_start"].max(), freq="7D")}
+    )
+    weekly = full_calendar.merge(weekly, on="week_start", how="left")
+    weekly["deaths_missing_week"] = weekly["deaths_week"].isna().astype(int)
     weekly["island_code"] = code
+
+    weekly = weekly[["week_start", "deaths_week", "deaths_missing_week", "island_code"]].copy()
+    weekly = weekly.sort_values("week_start").reset_index(drop=True)
     return weekly
 
 
@@ -116,20 +147,17 @@ def main(argv: list[str]) -> int:
     if not RAW_DEATHS.exists():
         raise FileNotFoundError(RAW_DEATHS)
 
-    codes = argv[1:] if len(argv) > 1 else list(ISLANDS.keys())
+    raw_codes = argv[1:] if len(argv) > 1 else list(ISLANDS.keys())
+    codes = [normalize_code(x) for x in raw_codes]
 
     df = pd.read_csv(RAW_DEATHS, sep=";", dtype=str, encoding="utf-8")
     for col in [ISLAND_COL, PERIOD_COL, VALUE_COL]:
         if col not in df.columns:
             raise KeyError(f"Missing column '{col}'. Found: {list(df.columns)}")
 
-    # 🔧 IMPORTANT: map exact 'Islas' values in the CSV to your codes.
-    # I can't guess the exact spelling/accents used by INE in your file,
-    # so we’ll validate against what's actually in the CSV.
     island_values = sorted(df[ISLAND_COL].astype(str).str.strip().unique())
     print("Found Islas values (sample):", island_values[:30], "..." if len(island_values) > 30 else "")
 
-    # Default mapping (very likely). If your CSV uses different labels, edit this dict.
     ISLAS_FILTER: Dict[str, str] = {
         "tfe": "Tenerife",
         "gcan": "Gran Canaria",
@@ -171,6 +199,7 @@ def main(argv: list[str]) -> int:
 
         weekly.to_parquet(out_fp, index=False)
         print(f"💾 Saved: {out_fp} shape={weekly.shape}")
+        print(f"   Missing weeks flagged: {int(weekly['deaths_missing_week'].sum())}")
         ok += 1
 
     print("\nDone. OK=", ok, "FAIL=", fail)

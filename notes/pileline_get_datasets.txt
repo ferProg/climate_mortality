@@ -3,47 +3,52 @@ Para obtener dataset por isla lo hacemos en este orden:
 Deaths -> Weather -> Visibility -> Air quality -> CAP -> Validación individual -> Merge master
 
 USED COMMANDS POWERSHELL:
-python src\master\build_deaths_weekly_by_island.py gcan
+
+python src\master\build_deaths_weekly_by_island.py gomera
 
 //saneamiento
-python -c "import pandas as pd; from pathlib import Path; fp=Path(r'data\processed\gran_canaria\deaths\deaths_weekly_gcan_1974-12-30_2026-01-26.parquet'); df=pd.read_parquet(fp); print('before:', df.shape, df.dtypes.to_dict()); df['week_start']=pd.to_datetime(df['week_start'], errors='coerce'); df=df.dropna(subset=['week_start']).sort_values('week_start').drop_duplicates(subset=['week_start'], keep='first').reset_index(drop=True); print('after:', df.shape, df.dtypes.to_dict()); print(df.head()); print(df.tail()); df.to_parquet(fp, index=False)"
+python -c "import pandas as pd; from pathlib import Path; fp=Path(r'data\processed\gomera\deaths\deaths_weekly_gom_1974-12-30_2026-01-26.parquet'); df=pd.read_parquet(fp); print('before:', df.shape, df.dtypes.to_dict()); df['week_start']=pd.to_datetime(df['week_start'], errors='coerce'); df=df.dropna(subset=['week_start']).sort_values('week_start').drop_duplicates(subset=['week_start'], keep='first').reset_index(drop=True); print('after:', df.shape, df.dtypes.to_dict()); print(df.head()); print(df.tail()); df.to_parquet(fp, index=False)"
 
 // comprobar si hay semanas raras o huecos
-python -c "import pandas as pd; from pathlib import Path; fp=Path(r'data\processed\gran_canaria\deaths\deaths_weekly_gcan_1974-12-30_2026-01-26.parquet'); df=pd.read_parquet(fp); df['week_start']=pd.to_datetime(df['week_start']); print('dup weeks:', df['week_start'].duplicated().sum()); print('null weeks:', df['week_start'].isna().sum()); print('min/max:', df['week_start'].min(), df['week_start'].max())"
+python -c "import pandas as pd; from pathlib import Path; fp=Path(r'data\processed\gomera\deaths\deaths_weekly_gom_1974-12-30_2026-01-26.parquet'); df=pd.read_parquet(fp); df['week_start']=pd.to_datetime(df['week_start']); print('dup weeks:', df['week_start'].duplicated().sum()); print('null weeks:', df['week_start'].isna().sum()); print('min/max:', df['week_start'].min(), df['week_start'].max())"
 
 
 //Weather
 $env:AEMET_API_KEY="eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJmcmFtb3MuZGF0YUBnbWFpbC5jb20iLCJqdGkiOiJlYTFkMWZiMS0zOWMxLTRhMjItOTZmOS1jZmY2YTgzMTIxZDEiLCJpc3MiOiJBRU1FVCIsImlhdCI6MTc3MTMzMTc2NywidXNlcklkIjoiZWExZDFmYjEtMzljMS00YTIyLTk2ZjktY2ZmNmE4MzEyMWQxIiwicm9sZSI6IiJ9.PJXTylTLmsQ5jPbhYkgrhm8EApqTY9_cJ1nzWH9iOrc"
-python -m src.ingests.aemet_station_daily_to_weekly --station C649I --start 2016-01-01 --end 2024-12-31 --island gran_canaria --format parquet --also-csv
+python -m src.ingests.aemet_station_daily_to_weekly --station c329z --start 2016-01-01 --end 2024-12-31 --island gomera --format parquet --also-csv
+
 
 //saneamiento
-python -c "import pandas as pd; from pathlib import Path; fp=max(Path(r'data\raw\gran_canaria\weather').glob('*.parquet'), key=lambda p: p.stat().st_mtime); df=pd.read_parquet(fp); print(df.shape); print(df['fecha'].min(), df['fecha'].max()); print(df['fecha'].nunique())"
-python -c "import pandas as pd; from pathlib import Path; fp=max(Path(r'data\processed\gran_canaria\weather').glob('*.parquet'), key=lambda p: p.stat().st_mtime); df=pd.read_parquet(fp); print(df.shape); print(df['week_start'].min(), df['week_start'].max()); print(df['week_start'].duplicated().sum())"
+python -c "import pandas as pd; from pathlib import Path; fp=max(Path(r'data\raw\gomera\weather').glob('*.parquet'), key=lambda p: p.stat().st_mtime); df=pd.read_parquet(fp); print(df.shape); print(df['fecha'].min(), df['fecha'].max()); print(df['fecha'].nunique())"
+python -c "import pandas as pd; from pathlib import Path; fp=max(Path(r'data\processed\gomera\weather').glob('*.parquet'), key=lambda p: p.stat().st_mtime); df=pd.read_parquet(fp); print(df.shape); print(df['week_start'].min(), df['week_start'].max()); print(df['week_start'].duplicated().sum())"
 
 
 //Visibility
-python -m src.ingests.visibility.run_island_pipeline --isla gran_canaria --start_date 2016-01-01 --end_date 2024-12-31 --stations GCLP
+python -m src.ingests.visibility.run_island_pipeline --isla gomera --start_date 2016-01-01 --end_date 2024-12-31 --stations GC
+
 //SANEAMIENTO 
-python -c "import pandas as pd; from pathlib import Path; fp=max(Path(r'data\interim\gran_canaria\visibility\step4_weekly').glob('*.parquet'), key=lambda p: p.stat().st_mtime); df=pd.read_parquet(fp); df['week_start']=pd.to_datetime(df['week_start'], errors='coerce'); print(df.shape); print(df['week_start'].min(), df['week_start'].max()); print('dup weeks:', df['week_start'].duplicated().sum()); print('null weeks:', df['week_start'].isna().sum())"
+python -c "import pandas as pd; from pathlib import Path; fp=max(Path(r'data\interim\la_gomera\visibility\step4_weekly').glob('*.parquet'), key=lambda p: p.stat().st_mtime); df=pd.read_parquet(fp); df['week_start']=pd.to_datetime(df['week_start'], errors='coerce'); print(df.shape); print(df['week_start'].min(), df['week_start'].max()); print('dup weeks:', df['week_start'].duplicated().sum()); print('null weeks:', df['week_start'].isna().sum())"
 
 //Air quality
-python -m src.ingests.airq.build_airq_daily --island gcan --start-year 2016 --end-year 2024 --root "C:\data\Air_Polution_GC_2015_2025_raw\Datos2016_2025" --outdir "data\interim\air_q"
-python -m src.ingests.airq.build_weekly_airq_island --island gran_canaria --daily-dir "data\interim\air_q" --processed-dir "data\processed"
+python -m src.ingests.airq.build_airq_daily --island lpa --start-year 2016 --end-year 2024 --root "C:\data\Air_Polution_GC_2015_2025_raw\Datos2016_2025" --outdir "data\interim\air_q"
+python -m src.ingests.airq.build_weekly_airq_island --island la_palma --daily-dir "data\interim\air_q" --processed-dir "data\processed"
 //saneamiento
 python -c "import pandas as pd; from pathlib import Path; fp=max(Path(r'data\processed\gran_canaria\air_quality').glob('*.parquet'), key=lambda p: p.stat().st_mtime); df=pd.read_parquet(fp); df['week_start']=pd.to_datetime(df['week_start'], errors='coerce'); print(df.shape); print(df['week_start'].min(), df['week_start'].max()); print('dup weeks:', df['week_start'].duplicated().sum()); print('null weeks:', df['week_start'].isna().sum()); print(df.head()); print(df.tail())"
 
 //CAP
-python -m src.ingests.cap.extract_canarias_avisos_by_island --isla gran_canaria --data-dir "data\interim\cap\canarias" --start 2016-01-01 --end 2024-12-31 --save-alerts
+python -m src.ingests.cap.extract_canarias_avisos_by_island --isla la_palma --data-dir "data\interim\cap\canarias" --start 2016-01-01 --end 2024-12-31 --save-alerts
 //saneamiento
-python -c "import pandas as pd; from pathlib import Path; fp=max(Path(r'data\processed\gran_canaria\cap').glob('cap_weekly_*.parquet'), key=lambda p: p.stat().st_mtime); df=pd.read_parquet(fp); df['week_start']=pd.to_datetime(df['week_start'], errors='coerce').dt.tz_localize(None); df=df.dropna(subset=['week_start']).sort_values('week_start').drop_duplicates(subset=['week_start'], keep='first').reset_index(drop=True); print(df.shape); print(df['week_start'].min(), df['week_start'].max()); print('dup weeks:', df['week_start'].duplicated().sum()); df.to_parquet(fp, index=False)"
+python -c "import pandas as pd; from pathlib import Path; fp=max(Path(r'data\processed\gomera\cap').glob('cap_weekly_*.parquet'), key=lambda p: p.stat().st_mtime); df=pd.read_parquet(fp); df['week_start']=pd.to_datetime(df['week_start'], errors='coerce').dt.tz_localize(None); df=df.dropna(subset=['week_start']).sort_values('week_start').drop_duplicates(subset=['week_start'], keep='first').reset_index(drop=True); print(df.shape); print(df['week_start'].min(), df['week_start'].max()); print('dup weeks:', df['week_start'].duplicated().sum()); df.to_parquet(fp, index=False)"
 
 //BUILD MASTER 
-python -m src.master.build_master_all_islands --island gran_canaria --processed-dir "data\processed" --interim-dir "data\interim"
+python -m src.master.build_master_all_islands --island gomera --processed-dir "data\processed" --interim-dir "data\interim"
+
 //saneamiento
-python -c "import pandas as pd; from pathlib import Path; fp=Path(r'data\processed\gran_canaria\master\master_gcan_2015_2024.parquet'); df=pd.read_parquet(fp); df['week_start']=pd.to_datetime(df['week_start']); s=df['week_start'].sort_values().reset_index(drop=True); gaps=s.diff().dropna().value_counts().sort_index(); print('gap distribution:\\n', gaps)"
+python -c "import pandas as pd; from pathlib import Path; fp=Path(r'data\processed\gomera\master\master_gom_2015_2024.parquet'); df=pd.read_parquet(fp); df['week_start']=pd.to_datetime(df['week_start']); s=df['week_start'].sort_values().reset_index(drop=True); gaps=s.diff().dropna().value_counts().sort_index(); print('gap distribution:\\n', gaps)"
 
 //BUILD CALIMA DATASET FROM MASTER
-python -m src.master.calima_per_island.build_calima_proxy_weekly --island gran_canaria --processed-dir "data\processed" --also-csv
+python -m src.master.calima_per_island.build_calima_proxy_weekly --island gomera --processed-dir "data\processed" --also-csv
+
 //saneamiento
-python -c "import pandas as pd; from pathlib import Path; fp=Path(r'data\processed\gran_canaria\calima\calima_proxy_weekly_gcan_2015_2024_v2.parquet'); df=pd.read_parquet(fp); df['week_start']=pd.to_datetime(df['week_start'], errors='coerce'); df=df.dropna(subset=['week_start']).sort_values('week_start').drop_duplicates(subset=['week_start'], keep='first').reset_index(drop=True); print('shape:', df.shape); print('range:', df['week_start'].min(), '->', df['week_start'].max()); print('dup weeks:', df['week_start'].duplicated().sum()); print('null week_start:', df['week_start'].isna().sum()); df.to_parquet(fp, index=False)"
-python -c "import pandas as pd; from pathlib import Path; fp=Path(r'data\processed\gran_canaria\calima\calima_proxy_weekly_gcan_2015_2024_v2.parquet'); df=pd.read_parquet(fp); df['week_start']=pd.to_datetime(df['week_start']); s=df['week_start'].sort_values().reset_index(drop=True); print('gap distribution:\\n', s.diff().dropna().value_counts().sort_index())"
+python -c "import pandas as pd; from pathlib import Path; fp=Path(r'data\processed\gomera\calima\calima_proxy_weekly_gom_2015_2024_v2.parquet'); df=pd.read_parquet(fp); df['week_start']=pd.to_datetime(df['week_start'], errors='coerce'); df=df.dropna(subset=['week_start']).sort_values('week_start').drop_duplicates(subset=['week_start'], keep='first').reset_index(drop=True); print('shape:', df.shape); print('range:', df['week_start'].min(), '->', df['week_start'].max()); print('dup weeks:', df['week_start'].duplicated().sum()); print('null week_start:', df['week_start'].isna().sum()); df.to_parquet(fp, index=False)"
+python -c "import pandas as pd; from pathlib import Path; fp=Path(r'data\processed\gomera\calima\calima_proxy_weekly_gom_2015_2024_v2.parquet'); df=pd.read_parquet(fp); df['week_start']=pd.to_datetime(df['week_start']); s=df['week_start'].sort_values().reset_index(drop=True); print('gap distribution:\\n', s.diff().dropna().value_counts().sort_index())"

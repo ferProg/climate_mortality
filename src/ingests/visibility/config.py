@@ -19,12 +19,12 @@ ROOT = find_project_root(Path.cwd())
 # Airports by island (ICAO codes)
 AIRPORTS_BY_ISLAND = {
     "tenerife": ["GCTS"],
-    "la_palma": ["GCLA"],
-    "la_gomera": ["GCGM"],
-    "el_hierro": ["GCHI"],
-    "gran_canaria": ["GCLP"],            
+    "gran_canaria": ["GCLP"],
     "lanzarote": ["GCRR"],
     "fuerteventura": ["GCFV"],
+    "la_palma": ["GCLA"],
+    "gomera": ["GCGM"],
+    "hierro": ["GCHI"],
 }
 
 # ICAO -> (USAF, WBAN) for NOAA ISD

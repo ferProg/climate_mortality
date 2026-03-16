@@ -41,9 +41,9 @@ def slug_island(s: str) -> str:
     if "fuerteventura" in s:
         return "fuerteventura"
     if "gomera" in s:
-        return "la_gomera"
+        return "gomera"
     if "hierro" in s:
-        return "el_hierro"
+        return "hierro"
     # extra-safe against "Las Palmas"
     if "palma" in s and "las palmas" not in s:
         return "la_palma"
@@ -150,14 +150,13 @@ def load_deaths_weekly(
     out = out.sort_values(["island", "week_start"]).reset_index(drop=True)
     return out
 
-
 def parse_island_arg(s: str) -> str:
     """
     Normalize user island input into our canonical slug.
     Accepts: 'Tenerife', 'Gran Canaria', 'La Palma', 'El Hierro', 'La Gomera', etc.
     """
     s_norm = _norm(s).replace("_", " ")
-    # allow common forms
+
     if "tenerife" in s_norm:
         return "tenerife"
     if "gran canaria" in s_norm or s_norm == "grancanaria":
@@ -167,16 +166,16 @@ def parse_island_arg(s: str) -> str:
     if "fuerteventura" in s_norm:
         return "fuerteventura"
     if "gomera" in s_norm:
-        return "la_gomera"
+        return "gomera"
     if "hierro" in s_norm:
-        return "el_hierro"
+        return "hierro"
     if "la palma" in s_norm or (s_norm == "palma" and "las palmas" not in s_norm):
         return "la_palma"
+
     raise ValueError(
         f"Unknown island '{s}'. Use one of: "
-        f"tenerife, gran_canaria, lanzarote, fuerteventura, la_palma, la_gomera, el_hierro"
+        f"tenerife, gran_canaria, lanzarote, fuerteventura, la_palma, gomera, hierro"
     )
-
 
 def main() -> None:
     ap = argparse.ArgumentParser(
