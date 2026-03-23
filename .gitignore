@@ -1,35 +1,25 @@
-# --- Jupyter ---
-**/.ipynb_checkpoints/
-*.ipynb_checkpoints
-.ipynb_checkpoints/
+# Virtual env
+.venv/
 
-# --- Python ---
+# Python
 __pycache__/
 *.py[cod]
 *.pyo
-*.pyd
-*.egg-info/
-dist/
-build/
-.venv/
-venv/
-env/
 
-# --- OS / Editor ---
-.DS_Store
-Thumbs.db
-.vscode/
-.idea/
+# Jupyter
+.ipynb_checkpoints/
 
-# --- Logs ---
-logs/
-*.log
-
-# --- Data: DO NOT PUBLISH ---
+# Data not published
 data/raw/
 data/interim/
 data/processed/
-**/*.csv
-*.json
 
-# If you want to keep empty dirs tracked, add a .gitkeep file inside them
+# Logs and notes
+logs/
+notes/
+
+# Scratch / temp files
+
+
+# Non-public exploratory notebooks
+notebooks/

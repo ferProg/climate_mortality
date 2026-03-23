@@ -1,0 +1,6 @@
+name,ok,detail
+required_cols_present,True,ok
+datetime_parse_week_start,True,bad=0
+duplicates_on_key,True,dups=0
+total_missing_cells,True,missing_cells=1279
+deaths_nonnegative,True,neg=0

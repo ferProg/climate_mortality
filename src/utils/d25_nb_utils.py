@@ -148,10 +148,11 @@ def set_island_paths(root: Path, island_code: str) -> dict[str, Path]:
     Standardize your project paths per island. Update once, reuse everywhere.
     """
     return {
-        "MASTER_DIR": root / "data" / "master" / island_code,
-        "EDA_DIR": root / "data" / "processed" / "eda_ready" / island_code,
-        "REPORTS_DIR": root / "reports" / island_code,
-    }
+            "MASTER_DIR": root / "data" / "master" / island_code,
+            "EDA_DIR": root / "data" / "processed" / "eda_ready" / island_code,
+            "FIG_DIR": root / "reports" / "islands" / "figures" / island_name,
+            "TAB_DIR": root / "reports" / "islands" / "tables" / island_name,
+        }
 
 
 def ensure_dir(path: Path) -> Path:
