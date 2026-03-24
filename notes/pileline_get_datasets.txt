@@ -14,7 +14,7 @@ python -c "import pandas as pd; from pathlib import Path; fp=Path(r'data\process
 
 
 //Weather
-$env:AEMET_API_KEY="eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJmcmFtb3MuZGF0YUBnbWFpbC5jb20iLCJqdGkiOiJlYTFkMWZiMS0zOWMxLTRhMjItOTZmOS1jZmY2YTgzMTIxZDEiLCJpc3MiOiJBRU1FVCIsImlhdCI6MTc3MTMzMTc2NywidXNlcklkIjoiZWExZDFmYjEtMzljMS00YTIyLTk2ZjktY2ZmNmE4MzEyMWQxIiwicm9sZSI6IiJ9.PJXTylTLmsQ5jPbhYkgrhm8EApqTY9_cJ1nzWH9iOrc"
+$env:AEMET_API_KEY="<SET_LOCALLY>
 python -m src.ingests.aemet_station_daily_to_weekly --station c329z --start 2016-01-01 --end 2024-12-31 --island gomera --format parquet --also-csv
 
 
