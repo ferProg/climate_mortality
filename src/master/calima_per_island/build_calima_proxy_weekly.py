@@ -30,7 +30,7 @@ ISLAND_CODE = {
 }
 
 
-def score_to_level_v2(score: float) -> str:
+def score_to_level(score: float) -> str:
     if score < 1:
         return "no_calima"
     elif score < 2:
@@ -70,7 +70,7 @@ def build_calima_proxy(df: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
     df["low_vis_flag"] = df["low_vis_any_week"].fillna(0).astype(int)
     df["pressure_high_flag"] = (df["pressure_hpa_mean"] >= pres_p75).astype(int)
 
-    df["calima_proxy_score_v2"] = (
+    df["calima_proxy_score"] = (
         1.0 * df["pm10_p90_flag"]
         + 1.0 * df["pm10_p95_flag"]
         + 1.0 * df["hum_low_flag"]
@@ -78,7 +78,7 @@ def build_calima_proxy(df: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
         + 0.5 * df["pressure_high_flag"]
     )
 
-    df["calima_proxy_level_v2"] = df["calima_proxy_score_v2"].apply(score_to_level_v2)
+    df["calima_proxy_level"] = df["calima_proxy_score"].apply(score_to_level)
 
     keep_cols = [
         "week_start",
@@ -96,8 +96,8 @@ def build_calima_proxy(df: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
         "hum_low_flag",
         "low_vis_flag",
         "pressure_high_flag",
-        "calima_proxy_score_v2",
-        "calima_proxy_level_v2",
+        "calima_proxy_score",
+        "calima_proxy_level",
     ]
 
     out = df[keep_cols].copy()
@@ -120,6 +120,18 @@ def parse_args() -> argparse.Namespace:
         required=True,
         choices=sorted(ISLAND_CODE.keys()),
         help="Canonical island name, e.g. gran_canaria",
+    )
+    ap.add_argument(
+        "--start-year",
+        type=int,
+        required=True,
+        help="Start year, e.g. 2016",
+    )
+    ap.add_argument(
+        "--end-year",
+        type=int,
+        required=True,
+        help="End year, e.g. 2025",
     )
     ap.add_argument(
         "--processed-dir",
@@ -145,11 +157,16 @@ def main() -> None:
     island = args.island
     code = ISLAND_CODE[island]
     processed_dir = Path(args.processed_dir)
+    start_year = args.start_year
+    end_year = args.end_year
+
+    if end_year < start_year:
+        raise ValueError("--end-year must be >= --start-year")
 
     if args.master_file:
         master_fp = Path(args.master_file)
     else:
-        master_fp = processed_dir / island / "master" / f"master_{code}_2015_2024.parquet"
+        master_fp = processed_dir / island / "master" / f"master_{code}_{start_year}_{end_year}.parquet"
 
     if not master_fp.exists():
         raise FileNotFoundError(f"Master file not found: {master_fp}")
@@ -160,7 +177,7 @@ def main() -> None:
     out_dir = processed_dir / island / "calima"
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    out_parquet = out_dir / f"calima_proxy_weekly_{code}_2015_2024_v2.parquet"
+    out_parquet = out_dir / f"calima_proxy_weekly_{code}_{start_year}_{end_year}.parquet"
     calima_df.to_parquet(out_parquet, index=False)
 
     print(f"Island: {island} ({code})")
@@ -172,13 +189,13 @@ def main() -> None:
         print(f"  {k} = {round(v, 2)}")
 
     print("\nScore distribution:")
-    print(calima_df["calima_proxy_score_v2"].value_counts().sort_index())
+    print(calima_df["calima_proxy_score"].value_counts().sort_index())
 
     print("\nLevel distribution:")
-    print(calima_df["calima_proxy_level_v2"].value_counts())
+    print(calima_df["calima_proxy_level"].value_counts())
 
     if args.also_csv:
-        out_csv = out_dir / f"calima_proxy_weekly_{code}_2015_2024_v2.csv"
+        out_csv = out_dir / f"calima_proxy_weekly_{code}_{start_year}_{end_year}.csv"
         calima_df.to_csv(out_csv, index=False)
         print(f"\nCSV: {out_csv}")
 

@@ -32,7 +32,7 @@ from typing import Dict, List, Optional
 
 import pandas as pd
 
-from src.utils.constants import island_code
+from src.utils.constants import island_code, ISLAND_CODES
 from src.utils.dates import normalize_week_start
 
 
@@ -47,8 +47,23 @@ ISLANDS = [
 ]
 
 
-ANALYSIS_START = pd.Timestamp("2015-12-28")
-ANALYSIS_END = pd.Timestamp("2024-12-30")
+def resolve_analysis_window(start_year: int, end_year: int) -> tuple[pd.Timestamp, pd.Timestamp]:
+    if end_year < start_year:
+        raise ValueError("--end-year must be >= --start-year")
+
+    start_date = pd.Timestamp(f"{start_year}-01-01")
+    end_date = pd.Timestamp(f"{end_year}-12-31")
+
+    # normalizar a semanas Monday-start
+    analysis_start = start_date - pd.to_timedelta(start_date.weekday(), unit="D")
+    analysis_end = end_date - pd.to_timedelta(end_date.weekday(), unit="D")
+
+    return analysis_start, analysis_end
+
+def clip_to_analysis(df: pd.DataFrame, analysis_start: pd.Timestamp, analysis_end: pd.Timestamp) -> pd.DataFrame:
+    return df[
+        (df["week_start"] >= analysis_start) & (df["week_start"] <= analysis_end)
+    ].copy()
 
 
 def parse_args() -> argparse.Namespace:
@@ -59,7 +74,7 @@ def parse_args() -> argparse.Namespace:
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
         "--island",
-        choices=ISLANDS,
+        choices=sorted(ISLAND_CODES.keys()),
         help="Canonical island name, e.g. tenerife",
     )
     group.add_argument(
@@ -67,6 +82,16 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Build master datasets for all islands",
     )
+    parser.add_argument(
+        "--start-year",
+        type=int,
+        required=True, 
+        help="Start year, e.g. 2016")
+    parser.add_argument(
+        "--end-year", 
+        type=int, 
+        required=True, 
+        help="End year, e.g. 2025")
 
     parser.add_argument(
         "--processed-dir",
@@ -123,33 +148,60 @@ def choose_single_match(base_dir: Path, pattern: str, source_name: str) -> Path:
         )
     return matches[-1]
 
+def find_all_matches(base_dir: Path, pattern: str, source_name: str) -> List[Path]:
+    matches = sorted(base_dir.glob(pattern))
+    if not matches:
+        raise FileNotFoundError(
+            f"{source_name}: no files matched pattern '{pattern}' under {base_dir}"
+        )
+    return matches
 
-def build_paths(island: str, processed_dir: Path, interim_dir: Path) -> Dict[str, Path]:
+
+def read_concat_weekly(paths: List[Path], source_name: str) -> pd.DataFrame:
+    frames: List[pd.DataFrame] = []
+
+    for path in paths:
+        df = pd.read_parquet(path)
+        if df.empty:
+            continue
+        df = ensure_week_start(df, f"{source_name}:{path.name}")
+        frames.append(df)
+
+    if not frames:
+        raise ValueError(f"{source_name}: all matched files were empty")
+
+    out = pd.concat(frames, ignore_index=True)
+    out = out.sort_values("week_start").drop_duplicates(subset=["week_start"], keep="last")
+    out = out.reset_index(drop=True)
+    return out
+
+
+def build_paths(island: str, processed_dir: Path, interim_dir: Path) -> Dict[str, object]:
     code = island_code(island)
 
     paths = {
-        "deaths": choose_single_match(
+        "deaths": find_all_matches(
             processed_dir / island / "deaths",
             f"deaths_weekly_{code}_*.parquet",
             "deaths",
         ),
-        "weather": choose_single_match(
+        "weather": find_all_matches(
             processed_dir / island / "weather",
             f"weather_weekly_{code}_*.parquet",
             "weather",
         ),
         # Visibility now lives in interim, produced by step4 of the visibility pipeline.
-        "visibility": choose_single_match(
+        "visibility": find_all_matches(
             interim_dir / island / "visibility" / "step4_weekly",
             f"visibility_weekly_{code}_*.parquet",
             "visibility",
         ),
-        "airq": choose_single_match(
+        "airq": find_all_matches(
             processed_dir / island / "air_quality",
             f"weekly_{code}_*.parquet",
             "air_quality",
         ),
-        "cap": choose_single_match(
+        "cap": find_all_matches(
             processed_dir / island / "cap",
             f"cap_weekly_{code}_*.parquet",
             "cap",
@@ -157,13 +209,10 @@ def build_paths(island: str, processed_dir: Path, interim_dir: Path) -> Dict[str
         "heliyon": processed_dir / "calima" / "calima_general_weekly.parquet",
     }
 
-    missing = [k for k, v in paths.items() if not Path(v).exists()]
-    if missing:
-        details = {k: str(paths[k]) for k in missing}
-        raise FileNotFoundError(f"Missing required input(s): {details}")
+    if not Path(paths["heliyon"]).exists():
+        raise FileNotFoundError(f"Missing required input: {paths['heliyon']}")
 
-    return {k: Path(v) for k, v in paths.items()}
-
+    return paths
 
 def select_cap_columns(df: pd.DataFrame) -> pd.DataFrame:
     wanted = [
@@ -252,41 +301,50 @@ def add_metadata(master: pd.DataFrame, island: str) -> pd.DataFrame:
     other_cols = [c for c in master.columns if c not in first_cols]
     return master[first_cols + other_cols]
 
+def validate_master(df: pd.DataFrame, analysis_start: pd.Timestamp, analysis_end: pd.Timestamp) -> None:
+    if df["week_start"].duplicated().any():
+        raise ValueError("Duplicate week_start rows found in master")
 
-def validate_master(master: pd.DataFrame, island: str) -> None:
-    if master["week_start"].isna().any():
-        raise ValueError(f"{island}: master contains null week_start values")
+    if not df["week_start"].is_monotonic_increasing:
+        raise ValueError("week_start is not sorted ascending")
 
-    dupes = int(master.duplicated(subset=["week_start"]).sum())
-    if dupes:
-        raise ValueError(f"{island}: master contains duplicated week_start rows = {dupes}")
-
-    expected_weeks = len(
-        pd.date_range(start=ANALYSIS_START, end=ANALYSIS_END, freq="W-MON")
-    )
-    if len(master) != expected_weeks:
+    expected_weeks = pd.date_range(start=analysis_start, end=analysis_end, freq="W-MON")
+    if len(df) != len(expected_weeks):
         raise ValueError(
-            f"{island}: expected {expected_weeks} weeks, got {len(master)}"
+            f"Unexpected number of weeks: got {len(df)}, expected {len(expected_weeks)} "
+            f"for {analysis_start.date()}..{analysis_end.date()}"
         )
+    
 
+def build_master(
+    island: str,
+    processed_dir: Path,
+    interim_dir: Path,
+    analysis_start: pd.Timestamp,
+    analysis_end: pd.Timestamp,
+    start_year: int,
+    end_year: int,
+) -> Path:
+    print(f"[build_master] {island} | {analysis_start.date()} .. {analysis_end.date()}")
 
-def build_master(island: str, processed_dir: Path, interim_dir: Path) -> Path:
     code = island_code(island)
     paths = build_paths(island=island, processed_dir=processed_dir, interim_dir=interim_dir)
 
-    deaths = prepare_generic_feed(read_parquet_checked(paths["deaths"], "deaths"), "deaths")
-    weather = select_weather_columns(read_parquet_checked(paths["weather"], "weather"))
-    visibility = prepare_generic_feed(read_parquet_checked(paths["visibility"], "visibility"), "visibility")
-    airq = prepare_generic_feed(read_parquet_checked(paths["airq"], "air_quality"), "air_quality")
-    cap = select_cap_columns(read_parquet_checked(paths["cap"], "cap"))
+    deaths = read_concat_weekly(paths["deaths"], "deaths")
+    weather = read_concat_weekly(paths["weather"], "weather")
+    visibility = read_concat_weekly(paths["visibility"], "visibility")
+    airq = read_concat_weekly(paths["airq"], "airq")
+    cap = read_concat_weekly(paths["cap"], "cap")
 
-    deaths = deaths[
-        (deaths["week_start"] >= ANALYSIS_START) & (deaths["week_start"] <= ANALYSIS_END)
-    ].copy()
+    deaths = clip_to_analysis(deaths, analysis_start, analysis_end)
+    weather = clip_to_analysis(weather, analysis_start, analysis_end)
+    visibility = clip_to_analysis(visibility, analysis_start, analysis_end)
+    airq = clip_to_analysis(airq, analysis_start, analysis_end)
+    cap = clip_to_analysis(cap, analysis_start, analysis_end)
 
     calendar = week_calendar(
-        start=str(ANALYSIS_START.date()),
-        end=str(ANALYSIS_END.date()),
+        start=str(analysis_start.date()),
+        end=str(analysis_end.date()),
     )
 
     heliyon_raw = read_parquet_checked(paths["heliyon"], "heliyon")
@@ -303,13 +361,11 @@ def build_master(island: str, processed_dir: Path, interim_dir: Path) -> Path:
 
     master = merge_master(calendar=calendar, feeds=feeds)
     master = add_metadata(master, island=island)
-    validate_master(master, island=island)
+    validate_master(master, analysis_start=analysis_start, analysis_end=analysis_end)
 
     outdir = processed_dir / island / "master"
     outdir.mkdir(parents=True, exist_ok=True)
 
-    start_year = int(master["week_start"].min().year)
-    end_year = int(master["week_start"].max().year)
     outpath = outdir / f"master_{code}_{start_year}_{end_year}.parquet"
     master.to_parquet(outpath, index=False)
 
@@ -321,26 +377,26 @@ def build_master(island: str, processed_dir: Path, interim_dir: Path) -> Path:
     print("Null counts (selected columns):")
 
     selected = [
-    c
-    for c in [
-        "deaths_week",
-        "PM10",
-        "PM2.5",
-        "temp_c_mean",
-        "SO2",
-        "NO2",
-        "O3",
-        "pressure_hpa_mean",
-        "cap_heat_yellow_plus_week",
-        "cap_dust_yellow_plus_week",
-        "calima_dai_flag",
-        "calima_level_week",
-        "low_vis_any_week",
-        "vis_min_m_week",
+        c
+        for c in [
+            "deaths_week",
+            "PM10",
+            "PM2.5",
+            "temp_c_mean",
+            "SO2",
+            "NO2",
+            "O3",
+            "pressure_hpa_mean",
+            "cap_heat_yellow_plus_week",
+            "cap_dust_yellow_plus_week",
+            "calima_dai_flag",
+            "calima_level_week",
+            "low_vis_any_week",
+            "vis_min_m_week",
+        ]
+        if c in master.columns
     ]
-    if c in master.columns
-    ]
-    
+
     if selected:
         print(master[selected].isna().sum())
     else:
@@ -351,9 +407,16 @@ def build_master(island: str, processed_dir: Path, interim_dir: Path) -> Path:
 
 def main() -> None:
     args = parse_args()
-
+    analysis_start, analysis_end = resolve_analysis_window(args.start_year, args.end_year)
     processed_dir = Path(args.processed_dir)
     interim_dir = Path(args.interim_dir)
+
+    ######TEMPORAL#####
+    print("ISLAND:", args.island)
+    print("START YEAR:", args.start_year)
+    print("END YEAR:", args.end_year)
+    print("ANALYSIS START:", analysis_start)
+    print("ANALYSIS END:", analysis_end)
 
     if args.all:
         outputs: List[Path] = []
@@ -364,6 +427,10 @@ def main() -> None:
                     island=island,
                     processed_dir=processed_dir,
                     interim_dir=interim_dir,
+                    analysis_start=analysis_start,
+                    analysis_end=analysis_end,
+                    start_year=args.start_year,
+                    end_year=args.end_year
                 )
             )
         print("\nBuilt master files:")
@@ -374,6 +441,10 @@ def main() -> None:
             island=args.island,
             processed_dir=processed_dir,
             interim_dir=interim_dir,
+            analysis_start=analysis_start,
+            analysis_end=analysis_end,
+            start_year=args.start_year,
+            end_year=args.end_year
         )
 
 
