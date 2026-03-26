@@ -1,22 +1,24 @@
 # Construye un dataset diario insular de calidad del aire a partir de los Excel anuales
 # de Canarias, recorriendo una lista priorizada de estaciones por isla.
 #
+# Parche 2026-03-26:
+# - Mantiene el comportamiento histórico por estaciones (2016-2024).
+# - Añade soporte para hojas por isla (por ejemplo en 2025: gran_canaria, gomera, etc.).
+# - Si existe una hoja-insla compatible, se prioriza esa hoja y no se exigen estaciones.
+#
 # Lógica:
 # 1) Para cada año, abre el Excel "Datos YYYY.xlsx".
-# 2) Busca las hojas/estaciones asociadas a la isla según un diccionario de prioridad.
-# 3) Lee cada hoja válida, limpia fechas y contaminantes principales:
+# 2) Primero intenta localizar una hoja de isla compatible.
+# 3) Si no existe, busca las hojas/estaciones asociadas a la isla según un diccionario de prioridad.
+# 4) Lee cada hoja válida, limpia fechas y contaminantes principales:
 #       PM10, PM2.5, SO2, NO2, O3
-# 4) Resume cada estación a nivel diario usando el máximo diario por contaminante.
-# 5) Para cada fecha, elige la primera estación de la lista que tenga PM10 disponible.
-#    Si una estación no tiene datos ese día, pasa a la siguiente.
-# 6) Devuelve una serie diaria insular con una sola fila por fecha y la estación elegida.
+# 5) Resume cada hoja a nivel diario usando el máximo diario por contaminante.
+# 6) Para cada fecha, elige la primera hoja de la lista que tenga PM10 disponible.
+#    Si una hoja no tiene datos ese día, pasa a la siguiente.
+# 7) Devuelve una serie diaria insular con una sola fila por fecha y la hoja elegida.
 #
 # Salida:
 # - daily_<codigo_isla>.csv
-#
-# Nota:
-# - La prioridad de estaciones está definida en STATIONS_BY_ISLAND.
-# - La estación usada puede cambiar de un día a otro si la prioritaria no tiene datos.
 
 from __future__ import annotations
 
@@ -24,7 +26,7 @@ import argparse
 import re
 import unicodedata
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 import pandas as pd
 
@@ -104,25 +106,25 @@ STATIONS_BY_ISLAND: Dict[str, List[str]] = {
     ],
 }
 
+# Alias aceptados para hojas insulares.
+# Se normalizan antes de comparar, así que puedes usar con/ sin guiones, acentos, etc.
+ISLAND_SHEET_ALIASES: Dict[str, List[str]] = {
+    "tfe": ["tenerife", "tfe"],
+    "gcan": ["gran_canaria", "gran canaria", "gcan"],
+    "lzt": ["lanzarote", "lzt"],
+    "ftv": ["fuerteventura", "fuerteventura ", "ftv"],
+    "lpa": ["la_palma", "la palma", "lpa"],
+    "gom": ["gomera", "la_gomera", "la gomera", "gom"],
+    "hie": ["hierro", "el_hierro", "el hierro", "hie"],
+}
 
 POLLUTANTS = ["PM10", "PM2.5", "SO2", "NO2", "O3"]
 OUTPUT_COLUMNS = ["date", "year", "PM10", "PM2.5", "SO2", "NO2", "O3", "station"]
-RAW_RENAME_MAP = {
-    "Fecha": "date",
-    "Hora": "hour",
-    "SO2": "SO2",
-    "NO2": "NO2",
-    "PM10": "PM10",
-    "PM2,5": "PM2.5",
-    "PM2.5": "PM2.5",
-    "O3": "O3",
-}
 
 
 # -----------------------------------------------------------------------------
 # Normalization helpers
 # -----------------------------------------------------------------------------
-
 def strip_accents(text: str) -> str:
     text = unicodedata.normalize("NFKD", text)
     return "".join(ch for ch in text if not unicodedata.combining(ch))
@@ -149,7 +151,6 @@ def normalize_station_name(name: str) -> str:
 # -----------------------------------------------------------------------------
 # Excel parsing
 # -----------------------------------------------------------------------------
-
 def build_year_file(root: Path, year: int) -> Path:
     return root / f"Datos{year}" / f"Datos {year}.xlsx"
 
@@ -159,6 +160,7 @@ def get_calendar_for_year(year: int) -> pd.DataFrame:
     out = pd.DataFrame({"date": dates})
     out["year"] = year
     return out
+
 
 def parse_mixed_excel_date(value):
     """
@@ -173,13 +175,10 @@ def parse_mixed_excel_date(value):
     if pd.isna(value):
         return pd.NaT
 
-    # Already datetime-like
     if isinstance(value, pd.Timestamp):
         return value.normalize()
 
-    # Excel serial date as int/float
     if isinstance(value, (int, float)):
-        # Avoid interpreting tiny numbers / junk as dates
         if value > 20000:
             try:
                 return pd.to_datetime(value, unit="D", origin="1899-12-30", errors="coerce").normalize()
@@ -190,12 +189,10 @@ def parse_mixed_excel_date(value):
     if not text:
         return pd.NaT
 
-    # Try day-first first (common in Spanish Excel files)
     dt = pd.to_datetime(text, errors="coerce", dayfirst=True)
     if pd.notna(dt):
         return dt.normalize()
 
-    # Fallback
     dt = pd.to_datetime(text, errors="coerce")
     if pd.notna(dt):
         return dt.normalize()
@@ -210,20 +207,17 @@ def parse_date_series(series: pd.Series) -> pd.Series:
 def read_station_sheet(excel_path: Path, sheet_name: str) -> pd.DataFrame:
     """
     Workbook structure:
-    - row 0: station name only
+    - row 0: station/island name only
     - row 1: real headers
     - then data rows
-    - later, a second duplicated block starts at a column named 'FECHA'
+    - later, sometimes a second duplicated block starts at a column named 'FECHA'
       that must be ignored completely.
     """
     df = pd.read_excel(excel_path, sheet_name=sheet_name, header=1)
 
-    # Normalize raw column labels to strings
     raw_cols = [str(c).strip() for c in df.columns]
     df.columns = raw_cols
 
-    # Keep only the FIRST block of columns, i.e. everything before the second block
-    # that starts with a column named 'FECHA'
     second_block_idx = None
     for i, col in enumerate(df.columns):
         if col == "FECHA":
@@ -233,11 +227,9 @@ def read_station_sheet(excel_path: Path, sheet_name: str) -> pd.DataFrame:
     if second_block_idx is not None:
         df = df.iloc[:, :second_block_idx].copy()
 
-    # Drop completely unnamed/blank columns if present
     keep_nonblank = [c for c in df.columns if c and not c.lower().startswith("unnamed")]
     df = df[keep_nonblank].copy()
 
-    # Rename only the columns we care about from the FIRST block
     rename_map = {
         "Fecha": "date",
         "Hora": "hour",
@@ -252,48 +244,65 @@ def read_station_sheet(excel_path: Path, sheet_name: str) -> pd.DataFrame:
 
     df = df.rename(columns=rename_map)
 
-    # Ensure expected columns exist even if absent in a given sheet
     expected_cols = ["date", "hour", "PM10", "PM2.5", "SO2", "NO2", "O3"]
     for col in expected_cols:
         if col not in df.columns:
             df[col] = pd.NA
 
-    # Keep only the columns needed downstream
     df = df[expected_cols].copy()
 
-    # Parse dates
     df["date"] = parse_date_series(df["date"])
-    bad_dates = df["date"].isna().sum()
+    bad_dates = int(df["date"].isna().sum())
     if bad_dates:
         print(f"WARNING: {sheet_name} -> bad date rows: {bad_dates} / {len(df)}")
 
-    # Parse numeric pollutant columns
     for col in ["PM10", "PM2.5", "SO2", "NO2", "O3"]:
         df[col] = pd.to_numeric(df[col], errors="coerce")
 
-    # Drop rows with no valid date
     df = df[df["date"].notna()].copy()
-
     return df
+
 
 def summarize_station_daily(df_station: pd.DataFrame, station_raw_name: str) -> pd.DataFrame:
     """
     Daily max for each pollutant.
-    The station is considered valid for a day if PM10 has at least one non-null value.
+    The sheet is considered valid for a day if PM10 has at least one non-null value.
     Other pollutants may remain NaN.
     """
     agg_map = {col: "max" for col in POLLUTANTS}
     daily = df_station.groupby("date", as_index=False).agg(agg_map)
 
-    pm10_valid = df_station.groupby("date")["PM10"].apply(lambda s: s.notna().any()).reset_index(name="pm10_has_data")
+    pm10_valid = (
+        df_station.groupby("date")["PM10"]
+        .apply(lambda s: s.notna().any())
+        .reset_index(name="pm10_has_data")
+    )
     daily = daily.merge(pm10_valid, on="date", how="left")
     daily["station"] = station_raw_name
     return daily
 
 
-def match_island_sheets(excel_path: Path, island_code: str) -> List[str]:
+def match_island_sheet_aliases(excel_path: Path, island_code: str) -> List[str]:
+    aliases = ISLAND_SHEET_ALIASES[island_code]
+
+    xls = pd.ExcelFile(excel_path)
+    available_sheets = xls.sheet_names
+    available_norm = {normalize_station_name(sheet): sheet for sheet in available_sheets}
+
+    matched: List[str] = []
+    for alias in aliases:
+        alias_norm = normalize_station_name(alias)
+        match = available_norm.get(alias_norm)
+        if match is not None and match not in matched:
+            matched.append(match)
+
+    if matched:
+        print(f"\n[{excel_path.name}] island={island_code} island_sheet_match={matched}")
+    return matched
+
+
+def match_island_station_sheets(excel_path: Path, island_code: str) -> List[str]:
     station_priority = STATIONS_BY_ISLAND[island_code]
-    wanted_norm = {normalize_station_name(name): name for name in station_priority}
 
     xls = pd.ExcelFile(excel_path)
     available_sheets = xls.sheet_names
@@ -310,7 +319,7 @@ def match_island_sheets(excel_path: Path, island_code: str) -> List[str]:
         else:
             missing.append(raw_station)
 
-    print(f"\n[{excel_path.name}] island={island_code} matched_sheets={len(matched_sheets)} missing={len(missing)}")
+    print(f"\n[{excel_path.name}] island={island_code} matched_station_sheets={len(matched_sheets)} missing={len(missing)}")
     if missing:
         print("  Missing stations:")
         for st in missing:
@@ -319,9 +328,22 @@ def match_island_sheets(excel_path: Path, island_code: str) -> List[str]:
     return matched_sheets
 
 
+def match_island_sheets(excel_path: Path, island_code: str) -> List[str]:
+    island_sheet_matches = match_island_sheet_aliases(excel_path, island_code)
+    if island_sheet_matches:
+        return island_sheet_matches
+    return match_island_station_sheets(excel_path, island_code)
+
+
 # -----------------------------------------------------------------------------
 # Year build logic
 # -----------------------------------------------------------------------------
+def build_empty_year_calendar(year: int) -> pd.DataFrame:
+    calendar = get_calendar_for_year(year)
+    for col in ["PM10", "PM2.5", "SO2", "NO2", "O3", "station"]:
+        calendar[col] = pd.NA
+    return calendar[OUTPUT_COLUMNS]
+
 
 def build_island_year_daily(root: Path, island_code: str, year: int) -> pd.DataFrame:
     excel_path = build_year_file(root, year)
@@ -331,10 +353,7 @@ def build_island_year_daily(root: Path, island_code: str, year: int) -> pd.DataF
     matched_sheets = match_island_sheets(excel_path, island_code)
     if not matched_sheets:
         print(f"No sheets matched for island={island_code}, year={year}. Returning empty calendar.")
-        calendar = get_calendar_for_year(year)
-        for col in ["PM10", "PM2.5", "SO2", "NO2", "O3", "station"]:
-            calendar[col] = pd.NA
-        return calendar[OUTPUT_COLUMNS]
+        return build_empty_year_calendar(year)
 
     station_daily_frames: List[pd.DataFrame] = []
 
@@ -346,16 +365,12 @@ def build_island_year_daily(root: Path, island_code: str, year: int) -> pd.DataF
         except Exception as exc:
             print(f"WARNING: failed reading sheet '{sheet_name}' in {excel_path.name}: {exc}")
 
+    if not station_daily_frames:
+        print(f"No usable station/island data for island={island_code}, year={year}. Returning empty calendar.")
+        return build_empty_year_calendar(year)
+
     calendar = get_calendar_for_year(year)
 
-    if not station_daily_frames:
-        print(f"No usable station data for island={island_code}, year={year}. Returning empty calendar.")
-        for col in ["PM10", "PM2.5", "SO2", "NO2", "O3", "station"]:
-            calendar[col] = pd.NA
-        return calendar[OUTPUT_COLUMNS]
-
-    # Combine in priority order.
-    # For each day, first station with pm10_has_data=True wins.
     station_choice_rows: List[pd.DataFrame] = []
     for priority, daily in enumerate(station_daily_frames):
         tmp = daily.copy()
@@ -397,7 +412,6 @@ def build_island_daily(root: Path, island_code: str, start_year: int, end_year: 
 # -----------------------------------------------------------------------------
 # CLI
 # -----------------------------------------------------------------------------
-
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Build daily air quality dataset for a Canary Island from yearly Excel books.")
     parser.add_argument("--island", required=True, choices=sorted(STATIONS_BY_ISLAND.keys()), help="Island code, e.g. tfe, gcan, lzt")
