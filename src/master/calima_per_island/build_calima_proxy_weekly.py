@@ -6,7 +6,7 @@
 # - Create binary component flags:
 #     high PM10, very high PM10, low humidity, low visibility, high pressure
 # - Combine them into a heuristic weekly score:
-#     calima_proxy_score_v2
+#     calima_proxy_score
 # - Map score to four interpretable levels:
 #     no_calima / possible / probable / intense
 # - Keep both source variables and derived proxy variables
@@ -50,10 +50,7 @@ def build_calima_proxy(df: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
         "PM2.5",
         "humidity_mean",
         "pressure_hpa_mean",
-        "low_vis_any_week",
-        "cap_dust_yellow_plus_week",
-        "cap_dust_level_max_week",
-        "calima_dai_flag",
+        "low_vis_any_week"
     ]
     missing = [c for c in required if c not in df.columns]
     if missing:
@@ -88,9 +85,6 @@ def build_calima_proxy(df: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
         "humidity_mean",
         "pressure_hpa_mean",
         "low_vis_any_week",
-        "cap_dust_yellow_plus_week",
-        "cap_dust_level_max_week",
-        "calima_dai_flag",
         "pm10_p90_flag",
         "pm10_p95_flag",
         "hum_low_flag",

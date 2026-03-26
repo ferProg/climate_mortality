@@ -1,0 +1,11 @@
+calima_proxy_score,calima_proxy_level,weeks
+0.0,no_calima,250
+0.5,no_calima,60
+1.0,possible,94
+1.5,possible,44
+2.0,probable,29
+2.5,probable,6
+3.0,intense,13
+3.5,intense,11
+4.0,intense,6
+4.5,intense,10
