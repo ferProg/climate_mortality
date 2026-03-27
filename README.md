@@ -143,9 +143,6 @@ Each island contains a dedicated notebook and summary.
 
 ## Next steps
 
-- finalise island README files
-- consolidate the publication-ready repository structure
-- decide whether to publish a small curated derived dataset
 - extend cross-island comparison
 - strengthen interpretation around confounding, missingness, and data quality
 
