@@ -106,12 +106,11 @@ def ensure_dirs(island: str, domain: str) -> Tuple[Path, Path, Path]:
     return raw_dir, proc_dir, logs_dir
 
 def daterange_chunks(start: date, end: date, chunk_days: int) -> Iterable[tuple[date, date]]:
-    cur = start
-    while cur <= end:
-        b = min(cur + timedelta(days=chunk_days - 1), end)
-        yield cur, b
-        cur = b + timedelta(days=1)
-
+    cur = start # puntero: empieza en fecha inicio
+    while cur <= end:  # mientras no pasemos del final
+        b = min(cur + timedelta(days=chunk_days - 1), end) # fin del trozo (o end si queda menos)
+        yield cur, b  # entrega este par y pausa
+        cur = b + timedelta(days=1)  # el siguiente trozo empieza al día siguiente  
 
 def parse_comma_decimal(x):
     if pd.isna(x):

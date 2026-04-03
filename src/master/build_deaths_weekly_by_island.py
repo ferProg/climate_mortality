@@ -84,6 +84,10 @@ def parse_ine_week_to_monday(periodo: str) -> Optional[pd.Timestamp]:
 
 
 def clean_total(x) -> Optional[float]:
+    # el INE usa formato europeo.
+    #  En Europa el separador de miles es . y el decimal es ,.
+    #  Python espera formato anglosajón — al revés.
+
     if pd.isna(x):
         return None
     s = str(x).strip()
@@ -103,6 +107,10 @@ def normalize_code(raw: str) -> str:
 
 
 def build_one_island(df: pd.DataFrame, code: str, island_name: str, island_value: str) -> Optional[pd.DataFrame]:
+    
+    #  Recibe el dataset entero del INE, el código de isla, su nombre interno, y su nombre exacto en el CSV.
+    #  Devuelve un DataFrame semanal limpio para esa isla, o None si algo falla.
+
     sub = df.loc[df[ISLAND_COL].astype(str).str.strip() == island_value].copy()
     if sub.empty:
         print(f"… {code}: no rows matched Islas='{island_value}'")
