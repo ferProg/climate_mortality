@@ -1,6 +1,16 @@
 '''
 Para esta variable, este script merge el master con calima_proxy y luego compara
 -> hay que pasarles como argumentos donde se encuentra el calima_proxy y el master parquets
+Lo Que Hace Este Script
+No es una "validación que rechaza/acepta". Es un diagnóstico.
+Lee: qa_calima_proxy_score_v2.py → genera reportes que te muestran:
+
+¿Está el proxy completo? (missing_pct, missing_by_year, missing_by_month)
+¿Qué rango tiene? (mean, min, max, p95, p99)
+¿Correlaciona con lo que debería? (proxy_checks: cap_dust, PM10, low_vis, deaths)
+¿Se mueve temporalmente como esperamos? (lead/lag correlations con deaths, ajustado por estacionalidad)
+
+Luego tú miras los CSVs y decides: "Esto tiene sentido" o "Algo está roto."
 '''
 
 import argparse
@@ -37,7 +47,7 @@ def main():
     ap.add_argument("--master", required=True, help="Path to weekly master parquet/csv")
     ap.add_argument("--calima", required=True, help="Path to calima proxy weekly parquet/csv")
     ap.add_argument("--island", required=True, help="e.g., gcan, tfe")
-    ap.add_argument("--var", default="calima_proxy_score_v2")
+    ap.add_argument("--var", default="calima_proxy_score")
     ap.add_argument("--outdir", default="reports/tables")
     args = ap.parse_args()
 

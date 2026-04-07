@@ -357,7 +357,7 @@ def build_weekly(df_daily: pd.DataFrame, coverage_rule: str = "any_temp") -> pd.
     df["pressure_hpa"] = (df["pres_max_hpa"] + df["pres_min_hpa"]) / 2.0
 
     # ISO week_start = Monday
-    df["week_start"] = df["fecha"].dt.normalize() - pd.to_timedelta(df["fecha"].dt.weekday, unit="D")
+    df["week_start"] = df["fecha"].dt.normalize() - pd.to_timedelta(df["fecha"].dt.weekday, unit="D") # normalize quita las horas de datetime.
 
     # Coverage rule: what counts as "a day with data"
     if coverage_rule == "tmed_only":

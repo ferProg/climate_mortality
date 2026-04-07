@@ -1,0 +1,2 @@
+island,rows_total,week_start_nulls,temp_logic_violations,temp_range_outliers,pressure_range_outliers,wind_mean_outliers,wind_gust_outliers,humidity_range_outliers,precip_negative,total_violations
+lzt,471,0,0,0,0,0,-1,0,-1,0

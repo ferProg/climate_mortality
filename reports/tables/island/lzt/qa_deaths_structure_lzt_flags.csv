@@ -1,0 +1,15 @@
+week_start,issue,details
+1978-06-05,deaths_week_null,
+1978-06-12,deaths_week_null,
+1978-06-19,deaths_week_null,
+1978-07-03,deaths_week_null,
+1980-10-27,deaths_week_null,
+1988-10-31,deaths_week_null,
+1994-04-04,deaths_week_null,
+1978-06-05,flag_deaths_missing_week,deaths_missing_week=1
+1978-06-12,flag_deaths_missing_week,deaths_missing_week=1
+1978-06-19,flag_deaths_missing_week,deaths_missing_week=1
+1978-07-03,flag_deaths_missing_week,deaths_missing_week=1
+1980-10-27,flag_deaths_missing_week,deaths_missing_week=1
+1988-10-31,flag_deaths_missing_week,deaths_missing_week=1
+1994-04-04,flag_deaths_missing_week,deaths_missing_week=1
