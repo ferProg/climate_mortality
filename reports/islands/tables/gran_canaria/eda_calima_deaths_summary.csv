@@ -1,0 +1,8 @@
+Finding,Value
+Strongest lag (highest |r|),lag0 (same week) (r=0.197)
+ANOVA F-statistic,15.57
+ANOVA p-value,1.04e-09
+Effect size (η²),0.0827 (medium)
+Δ deaths (intense vs no_calima),+12.88 deaths/week
+Δ deaths (intense vs possible),+21.17 deaths/week
+Sample size - intense weeks,40 weeks

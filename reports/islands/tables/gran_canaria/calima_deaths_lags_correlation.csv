@@ -1,0 +1,4 @@
+lag,correlation,n_pairs
+lag0 (same week),0.1970151160245269,522
+lag1 (1 week prior),0.18433458184558812,521
+lag2 (2 weeks prior),0.18487497473159561,520

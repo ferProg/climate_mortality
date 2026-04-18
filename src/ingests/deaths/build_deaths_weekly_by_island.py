@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import sys
 from pathlib import Path
 from typing import Dict, Optional
@@ -152,13 +153,48 @@ def build_one_island(df: pd.DataFrame, code: str, island_name: str, island_value
 
 
 def main(argv: list[str]) -> int:
-    if not RAW_DEATHS.exists():
-        raise FileNotFoundError(RAW_DEATHS)
+    ap = argparse.ArgumentParser(
+        description="Extract weekly deaths by island, with optional year filtering."
+    )
+    ap.add_argument(
+        "islands",
+        nargs="*",
+        help="Island codes/names (tfe, gcan, lzt, etc.). If omitted, process all islands.",
+    )
+    ap.add_argument(
+        "--start_year",
+        type=int,
+        default=None,
+        help="Filter weeks starting from this year (inclusive).",
+    )
+    ap.add_argument(
+        "--end_year",
+        type=int,
+        default=None,
+        help="Filter weeks up to this year (inclusive).",
+    )
+    ap.add_argument(
+        "--data",
+        type=str,
+        default=None,
+        help="Override DATA_DIR path (default: auto-detect from script location).",
+    )
+    args = ap.parse_args(argv[1:])
 
-    raw_codes = argv[1:] if len(argv) > 1 else list(ISLANDS.keys())
+    # Override DATA_DIR if provided
+    data_dir = Path(args.data).resolve() if args.data else DATA_DIR
+
+    if not data_dir.exists():
+        raise FileNotFoundError(f"Data directory not found: {data_dir}")
+
+    raw_deaths = data_dir / "raw" / "deaths" / "ine_35178.csv"
+    if not raw_deaths.exists():
+        raise FileNotFoundError(f"RAW_DEATHS file not found: {raw_deaths}")
+
+    raw_codes = args.islands if args.islands else list(ISLANDS.keys())
     codes = [normalize_code(x) for x in raw_codes]
 
-    df = pd.read_csv(RAW_DEATHS, sep=";", dtype=str, encoding="utf-8")
+    df = pd.read_csv(raw_deaths, sep=";", dtype=str, encoding="utf-8")
     for col in [ISLAND_COL, PERIOD_COL, VALUE_COL]:
         if col not in df.columns:
             raise KeyError(f"Missing column '{col}'. Found: {list(df.columns)}")
@@ -198,12 +234,31 @@ def main(argv: list[str]) -> int:
             fail += 1
             continue
 
-        out_dir = DATA_DIR / "processed" / island_name / "deaths"
+        # Apply year filtering if specified
+        if args.start_year is not None or args.end_year is not None:
+            start_year = args.start_year if args.start_year is not None else weekly["week_start"].dt.year.min()
+            end_year = args.end_year if args.end_year is not None else weekly["week_start"].dt.year.max()
+            
+            weekly = weekly[
+                (weekly["week_start"].dt.year >= start_year) &
+                (weekly["week_start"].dt.year <= end_year)
+            ].copy()
+            
+            print(f"   Filtered to years {start_year}-{end_year}: {len(weekly)} rows")
+
+        out_dir = data_dir / "processed" / island_name / "deaths"
         out_dir.mkdir(parents=True, exist_ok=True)
 
         dmin = weekly["week_start"].min().date()
         dmax = weekly["week_start"].max().date()
-        out_fp = out_dir / f"deaths_weekly_{code}_{dmin}_{dmax}.parquet"
+        
+        # Append year range to filename if filtered
+        if args.start_year is not None or args.end_year is not None:
+            start_year = args.start_year if args.start_year is not None else dmin.year
+            end_year = args.end_year if args.end_year is not None else dmax.year
+            out_fp = out_dir / f"deaths_weekly_{code}_{start_year}_{end_year}.parquet"
+        else:
+            out_fp = out_dir / f"deaths_weekly_{code}_{dmin}_{dmax}.parquet"
 
         weekly.to_parquet(out_fp, index=False)
         print(f"💾 Saved: {out_fp} shape={weekly.shape}")

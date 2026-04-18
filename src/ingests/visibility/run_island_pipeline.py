@@ -149,7 +149,7 @@ def main() -> None:
         parsed_dir = base_interim / "step1_yearly"
         daily_dir = base_interim / "step2_daily"
         island_daily_dir = base_interim / "step3_daily"
-        weekly_dir = base_interim / "step4_weekly"
+        weekly_dir = project_root / "data" / "processed" / island / "visibility"
 
     # --- Step1 ---
     manifest_fp = run_step1_load_isd(

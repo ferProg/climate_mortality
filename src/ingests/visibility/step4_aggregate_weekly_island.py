@@ -5,7 +5,6 @@ from typing import Optional
 import pandas as pd
 
 DEFAULT_OUT_DIR = Path("data/interim/visibility/step4_weekly")
-
 def run_step4_aggregate_weekly(
     island_daily_fp: Path,
     out_dir: Path = DEFAULT_OUT_DIR,

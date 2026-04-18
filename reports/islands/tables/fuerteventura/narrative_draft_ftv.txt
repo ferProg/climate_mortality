@@ -1,0 +1,38 @@
+
+### What We See — Fuerteventura Seasonality
+
+**Temporal patterns exist, but are modest.**
+
+1. **Monthly variation** ranges from 8.9 to 11.3 deaths/week — 
+   that's a 2.4-death swing across the year. The peak is in Dec, 
+   the trough in Jul.
+
+2. **Quarterly pattern** shows Q3 as the quietest quarter 
+   (9.2 deaths/week) and Q1 as the busiest 
+   (10.5 deaths/week). This is consistent with the monthly pattern.
+
+3. **Intense calima years vs no-calima years:** Counterintuitively, years with high calima burden 
+   show 0.37 fewer deaths/week on average. 
+   This mirrors the earlier finding in the core EDA (weekly-level comparison).
+
+---
+
+### What We Don't See (Yet)
+
+- **Clear heat/cold signal:** Earlier analysis (main EDA) showed weak correlations with temperature. 
+  The seasonality here doesn't obviously cluster around summer/winter extremes.
+
+- **Obvious calima-death link at seasonal scale:** The year-level comparison suggests the opposite of 
+  what we might expect from air quality data.
+
+- **Within-year trends:** Are deaths climbing or falling as the year progresses? 
+  Current summary is static. Time-series decomposition (trend + seasonal + residual) might reveal more.
+
+---
+
+### Next Steps to Consider
+
+1. Compare seasonality across other islands (Lanzarote, La Palma, etc.) — is this pattern unique to FTV?
+2. Lag analysis: Do calima events today predict deaths next week/month?
+3. Interaction: Heat + Calima together — does their joint presence matter?
+4. Age-stratified if data available: Different age groups may show different seasonal patterns.

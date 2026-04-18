@@ -112,6 +112,19 @@ Early exploratory results suggest that:
 
 These findings are descriptive, not causal.
 
+## EDA Status (updated 2026-04-16)
+
+| Island | Master built | EDA done | Key findings |
+|---|---|---|---|
+| Tenerife | ✅ `master_tfe_2016_2025.parquet` (522 semanas, 49 cols) | ✅ Apr 13 | Δ muertes calima intensa vs no_calima: **+18.72/week**. Corr muertes/tmax anomalía: 0.054 (señal débil). Outputs: 6 tablas + 3 figs en `reports/islands/`. |
+| Gran Canaria | ✅ | ✅ Apr 14 | Lag0 r=0.197. ANOVA F=15.57, p<0.001, η²=0.0827. Δ intense vs no_calima: **+12.88/week**. Δ intense vs possible: +21.17. Patrón no-monotónico. |
+| Lanzarote | ⏳ Pendiente | ⏳ Pendiente | — |
+| Fuerteventura | ✅ | ✅ Apr 16 | Seasonality mensual + trimestral documentada. **Lag2 = efecto principal** (calima → mortalidad con 2 semanas de retraso). Year-over-year documentado. Narrativa + executive summary completados. Notebook: `eda_seasonality_ftv.ipynb`. |
+| La Palma | ⏳ Pendiente | ⏳ Pendiente | — |
+| Gomera | ⏳ Pendiente | ⏳ Pendiente | — |
+
+**Note (Apr 13):** Master datasets desaparecidos → pipeline reconstruido completo antes de iniciar EDA. Pipeline ahora estable y reproducible end-to-end.
+
 ## Limitations
 
 - the project currently works at **weekly** resolution, which limits temporal precision

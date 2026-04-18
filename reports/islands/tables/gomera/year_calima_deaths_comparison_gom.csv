@@ -1,0 +1,3 @@
+year_calima_class,n_weeks,mean_deaths,std_deaths,min_deaths,max_deaths,median_deaths
+intense_calima,51,4.31,1.87,1.0,8.0,4.0
+no_calima,453,4.07,1.99,0.0,10.0,4.0

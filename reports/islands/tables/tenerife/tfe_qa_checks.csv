@@ -2,5 +2,5 @@ index,name,ok,detail
 0,required_cols_present,True,ok
 1,datetime_parse_week_start,True,bad=0
 2,duplicates_on_key,True,dups=0
-3,total_missing_cells,True,missing_cells=1517
+3,total_missing_cells,True,missing_cells=2028
 4,deaths_nonnegative,True,neg=0
