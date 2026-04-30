@@ -28,3 +28,4 @@ __pycache__/
 
 # Non-public exploratory notebooks
 notebooks/SESSION_BLOCK_CLOSE_*.md
+SESSION_BLOCK_CLOSE_*.md
