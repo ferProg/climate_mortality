@@ -28,7 +28,6 @@ ISLAND_CODE = {
     "fuerteventura": "ftv",
     "la_palma": "lpa",
     "gomera": "gom",
-    "hierro": "hie",
 }
 
 

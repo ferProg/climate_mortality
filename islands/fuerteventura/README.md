@@ -125,3 +125,11 @@ This notebook exports:
 - time-series and comparison figures
 
 These outputs are intended to support a transparent, island-by-island comparison across the Canary Islands.
+
+---
+
+## Session Log
+
+| Date | Action | Status | Notes |
+|------|--------|--------|-------|
+| 2026-04-24 | EDA notebook completo — secciones 1, 1.5, 2, 3, 4, 4.1, 5, 6, 7 ejecutadas y documentadas | ✅ Completo | Masters y proxies reconstruidos tras pipeline fix visibilidad 2025. **Anomalía 7.1 investigada y resuelta:** Δ=−0.11 es artefacto de confusión estacional — semanas intense concentradas en invierno, pero sin exceso de mortalidad dentro de cada mes invernal. |

@@ -190,3 +190,11 @@ At weekly island level:
 - but the signal remains modest and should be interpreted cautiously, especially given seasonality and aggregation limits
 
 Overall, La Palma supports a **careful, non-causal** narrative of elevated mortality during more intense calima conditions, while still requiring stronger modelling or adjustment before any firmer claim.
+
+---
+
+## Session Log
+
+| Date | Action | Status | Notes |
+|------|--------|--------|-------|
+| 2026-04-24 | EDA notebook completo — secciones 1, 1.5, 2, 3, 4, 4.1, 5, 6, 7 ejecutadas y documentadas | ✅ Completo | Pipeline fix previo: digest visibilidad 2025 generado para La Palma, master y proxy reconstruidos. Señal débil pero monotónica: Δ=+1.78, p=0.086, n=20 intense. Sin anomalías. Section 7 añadida como placeholder. |

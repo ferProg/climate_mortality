@@ -1,0 +1,3 @@
+comparison,n_overlap,overall_agreement_pct,proxy_calima_source_agrees_pct,source_calima_proxy_agrees_pct
+proxy_vs_cap,522,36.4,7.6,87.1
+proxy_vs_dai,522,49.6,47.3,68.9

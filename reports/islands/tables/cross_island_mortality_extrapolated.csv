@@ -1,0 +1,7 @@
+island,population,mean_no_calima,mean_intense,delta_raw,delta_per_100k,n_intense_weeks,delta_extrapolated
+gran_canaria,855000,132.84,150.8,17.97,2.101,46,19.33
+tenerife,920000,138.18,155.37,17.19,1.868,49,17.19
+lanzarote,155000,15.77,17.93,2.16,1.394,41,12.82
+la_palma,83000,15.75,16.87,1.12,1.35,23,12.42
+gomera,22000,4.08,4.14,0.06,0.269,7,2.47
+fuerteventura,120000,9.87,10.11,0.23,0.194,38,1.78

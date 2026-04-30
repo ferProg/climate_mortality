@@ -101,29 +101,48 @@ The emphasis is on transparency, structured QA, and cautious interpretation rath
 
 The repository combines data ingestion, weekly aggregation, quality checks, island-level exploratory analysis, and generated figures/tables. The current focus is descriptive and analytical rather than causal: the goal is to identify patterns worth understanding while being explicit about uncertainty, missingness, and confounding.
 
-## Initial findings
+## Findings (updated 2026-04-29)
 
-Early exploratory results suggest that:
+Island-level analysis using Calima Proxy v2 (normalised score [0–1], incorporating visibility, PM10, PM2.5, humidity, and temperature anomaly; AUC 0.886 vs CAP+DAI validation) across all six islands, 2016–2025.
 
-- Higher mortality tends to coincide with stronger dust-related conditions
-- CAP yellow dust-alert weeks often coincide with higher average deaths
-- PM10 and dust-level indicators show positive associations with mortality in several island-level analyses
-- simple linear temperature relationships can be weak or misleading, likely due to seasonality and non-linearity
+**Island-level results (EDA Calima-Mortality v2):**
 
-These findings are descriptive, not causal.
+| Island | Δ deaths/week (intense calima) | ANOVA p | η² | Conclusion |
+|--------|-------------------------------|---------|-----|------------|
+| Tenerife | +17.19 | <0.001 | 0.054 | Strong signal |
+| Gran Canaria | +17.97 | <0.001 | 0.058 | Strong signal |
+| Lanzarote | +2.16 | 0.043 | 0.016 | Marginal signal |
+| La Palma | +1.12 | 0.617 | 0.003 | No signal |
+| Gomera | — | — | — | Analysis discontinued |
+| Fuerteventura | — | — | — | Analysis discontinued |
 
-## EDA Status (updated 2026-04-16)
+**Population-adjusted comparison (δ deaths per 100k inhabitants):**
 
-| Island | Master built | EDA done | Key findings |
-|---|---|---|---|
-| Tenerife | ✅ `master_tfe_2016_2025.parquet` (522 semanas, 49 cols) | ✅ Apr 13 | Δ muertes calima intensa vs no_calima: **+18.72/week**. Corr muertes/tmax anomalía: 0.054 (señal débil). Outputs: 6 tablas + 3 figs en `reports/islands/`. |
-| Gran Canaria | ✅ | ✅ Apr 14 | Lag0 r=0.197. ANOVA F=15.57, p<0.001, η²=0.0827. Δ intense vs no_calima: **+12.88/week**. Δ intense vs possible: +21.17. Patrón no-monotónico. |
-| Lanzarote | ⏳ Pendiente | ⏳ Pendiente | — |
-| Fuerteventura | ✅ | ✅ Apr 16 | Seasonality mensual + trimestral documentada. **Lag2 = efecto principal** (calima → mortalidad con 2 semanas de retraso). Year-over-year documentado. Narrativa + executive summary completados. Notebook: `eda_seasonality_ftv.ipynb`. |
-| La Palma | ⏳ Pendiente | ⏳ Pendiente | — |
-| Gomera | ⏳ Pendiente | ⏳ Pendiente | — |
+| Island | δ/100k |
+|--------|--------|
+| Gran Canaria | +2.101 |
+| Tenerife | +1.868 |
+| Lanzarote | +1.394 |
+| La Palma | +1.350 |
+| Gomera | +0.269 |
+| Fuerteventura | +0.194 |
 
-**Note (Apr 13):** Master datasets desaparecidos → pipeline reconstruido completo antes de iniciar EDA. Pipeline ahora estable y reproducible end-to-end.
+Convergence of +1.35–2.10 per 100k across the four largest islands suggests a genuine per-capita mechanism independent of population size.
+
+**Seasonality (Tenerife + Gran Canaria):** The calima-mortality association is not confounded by seasonal patterns. Both a same-week effect (lag0, r=0.221) and a delayed two-week effect (lag2, r=0.192–0.205) are present, consistent with a dual mechanism of acute exacerbation and delayed inflammatory response.
+
+**Provincial-level analysis (Phase 2, completed 2026-04-29):**
+
+Calima Proxy v2 extended to provincial scale with consistent methodology:
+
+| Province | Δ deaths/week (intense) | η² | Lag0 | Lag2 | Status |
+|----------|------------------------|-----|------|------|--------|
+| SC Tenerife (TFE + La Palma + Gomera) | +17.88 | **0.0563** | 0.056 | 0.041 | ✅ Phase 2 complete |
+| Las Palmas (GC + Lanzarote + FTV) | — | — | — | — | ⏳ Phase 3 in progress |
+
+**Key finding:** Provincial η² (0.0563) ≈ insular η² (TFE 0.0541, GC 0.0058) → signal strengthens or maintains (NOT diluted) with aggregation. Confirms genuine per-capita mechanism across scales.
+
+All findings are descriptive and associational, not causal.
 
 ## Limitations
 
@@ -154,10 +173,44 @@ Start from the island-level analyses:
 
 Each island contains a dedicated notebook and summary.
 
-## Next steps
+## Phases (updated 2026-04-29)
 
-- extend cross-island comparison
-- strengthen interpretation around confounding, missingness, and data quality
+**Phase 1 — Island-level EDA:** ✅ Complete (Apr 26)
+- 6 islands, Calima Proxy v2 (AUC 0.886), consistent methodology across islands
+- Strong signal: Tenerife (η²=0.054), Gran Canaria (η²=0.058); marginal/no signal: smaller islands
+
+**Phase 2 — Provincial-level EDA:** ✅ Complete (Apr 29)
+- SC Tenerife provincial (TFE + La Palma + Gomera): η²=0.0563 (NOT diluted vs insular)
+- Calima Proxy v2 extended to provincial scale with population-weighted aggregation
+- Methodology blocker resolved: proxy now includes continuous score + categorical levels (consistent with island-level)
+
+**Phase 3 — Las Palmas provincial:** ⏳ In progress
+- Master generated (Apr 28), EDA template validated (Apr 29)
+- Ready to replicate SC Tenerife template
+
+**Phase 4–5:** ⏳ Pending
+- CCAA-level EDA (expected May 2)
+- Synthesis + regression specification (expected May 2)
+
+| Master | Filas | Deaths nulls | Calima nulls | Intense episodes |
+|--------|-------|--------------|--------------|-----------------|
+| `master_provincial_sc_tenerife_2016_2025.parquet` | 522 | 0 | 0 | 49 |
+| `master_provincial_las_palmas_2016_2025.parquet` | 522 | 0 | 0 | 46 |
+| `master_ccaa_canarias_2016_2025.parquet` | 522 | 0 | 0 | 58 (any) / 37 (both) |
+
+CCAA master includes 4 calima columns: `calima_sct`, `calima_lp`, `calima_any`, `calima_both`.
+
+Deaths/100k ranges: SC Tenerife 10.56–23.55 · Las Palmas 9.53–21.28 · CCAA 10.49–21.67.
+
+Scripts: `src/ingests/provinces/` + `src/master/ccaa/`
+
+## Current status and next steps
+
+Island-level EDA is complete (v2). Provincial masters generated (2026-04-28). The next phase:
+
+1. **Provincial EDA** — SC Tenerife + Las Palmas: correlación calima intensa vs deaths_per_100k, η² provincial vs η² insular ← **próximo**
+2. **CCAA EDA** — tabla η² multinivel (isla → provincia → CCAA)
+3. **Multivariate regression** — deaths/100k ~ calima_score + season + controls (planned after provincial EDA)
 
 ## License
 

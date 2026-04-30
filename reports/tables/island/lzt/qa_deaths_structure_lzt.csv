@@ -1,2 +1,0 @@
-island,rows_total,deaths_week_nulls,deaths_week_nulls_pct,week_start_nulls,duplicate_week_starts,date_min,date_max,expected_weekly_rows,actual_rows,missing_weeks_count,missing_weeks_pct,n_flag_columns,deaths_mean,deaths_median,deaths_min,deaths_max,deaths_p95,deaths_p99
-lzt,2666,7,0.2625656414103526,0,0,1974-12-30 00:00:00,2026-01-26 00:00:00,2666,2666,0,0.0,1,9.926664159458443,9.0,1.0,31.0,20.0,24.0

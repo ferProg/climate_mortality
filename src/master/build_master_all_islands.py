@@ -43,7 +43,6 @@ ISLANDS = [
     "fuerteventura",
     "la_palma",
     "gomera",
-    "hierro",
 ]
 
 
@@ -190,9 +189,8 @@ def build_paths(island: str, processed_dir: Path, interim_dir: Path) -> Dict[str
             f"weather_weekly_{code}_*.parquet",
             "weather",
         ),
-        # Visibility now lives in interim, produced by step4 of the visibility pipeline.
         "visibility": find_all_matches(
-            interim_dir / island / "visibility" / "step4_weekly",
+            processed_dir / island / "visibility",
             f"visibility_weekly_{code}_*.parquet",
             "visibility",
         ),

@@ -171,6 +171,23 @@ The notebook exports the main tables and figures to the island report folders, i
 
 ---
 
+## Session Log
+
+### 2026-04-22 — EDA Lanzarote ✅ Completado
+
+- Carga y validación del master (`master_lzt_2016_2025.parquet`) — shape, columnas, rango temporal confirmados
+- Diagnóstico de nulos en `calima_level_week` y `calima_dai_flag` (198 nulos, 2022–2025) — identificado como limitación de la fuente Heliyon, no bug de pipeline
+- Confirmado que el proxy NO usa CAP ni DAI — solo PM10, humidity, visibility y pressure
+- Fuente DAI (Heliyon) identificada como regional para todas las islas, almacenada bajo nombre `tfe` (limitación documentada)
+- **Sección 1.5 añadida al notebook:** validación proxy vs CAP y proxy vs DAI con % de acuerdo asimétrico en ambas direcciones
+- Hallazgo clave: señal descriptiva de mortalidad concentrada en `intense`, sin gradiente limpio en niveles intermedios — claim mantenible con matices documentados
+
+**Pendientes:**
+- Ejecutar notebook completo end-to-end para verificar integración de la sección 1.5
+- Replicar validación proxy vs CAP/DAI para otras islas
+
+---
+
 ## Bottom line
 
 Lanzarote behaves as a **calima-led descriptive signal** rather than a heat-led one.

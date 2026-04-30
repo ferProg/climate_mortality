@@ -1,0 +1,16 @@
+metric,value
+month_min,Sep
+month_min_deaths,128.7
+month_max,Jan
+month_max_deaths,168.58
+month_range,39.880000000000024
+quarter_min,Q3
+quarter_min_deaths,130.36
+quarter_max,Q1
+quarter_max_deaths,159.49
+quarter_range,29.129999999999995
+intense_years_mean,146.75
+intense_years_n,209
+no_calima_years_mean,136.45
+no_calima_years_n,313
+delta_years,10.300000000000011

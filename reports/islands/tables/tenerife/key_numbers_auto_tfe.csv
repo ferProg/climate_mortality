@@ -2,9 +2,9 @@ metric,value
 deaths_mean_baseline_heat,140.5979797979798
 deaths_mean_heat_p95,140.1851851851852
 delta_deaths_heat_p95_vs_baseline,-0.41279461279461316
-deaths_mean_no_calima,138.8516129032258
-deaths_mean_intense_calima,157.375
-delta_deaths_intense_vs_no_calima,18.5233870967742
+deaths_mean_no_calima,138.18028169014084
+deaths_mean_intense_calima,155.3673469387755
+delta_deaths_intense_vs_no_calima,17.187065248634667
 proxy_missing_n,0
 proxy_missing_pct,0.0
 temp_corr_col_used,tmax_c_mean

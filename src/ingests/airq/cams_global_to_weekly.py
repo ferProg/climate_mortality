@@ -64,6 +64,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--chunk-months", type=int, default=1, choices=[1, 2, 3, 6, 12])
     parser.add_argument("--also-csv", action="store_true")
     parser.add_argument("--keep-nc", action="store_true")
+    parser.add_argument(
+        "--skip-download",
+        action="store_true",
+        help="Skip download and read the existing 6-hourly parquet from raw_dir.",
+    )
     return parser.parse_args()
 
 
@@ -72,7 +77,7 @@ def ensure_dir(path: Path) -> None:
 
 
 def get_project_root() -> Path:
-    return Path(__file__).resolve().parents[2]
+    return Path(__file__).resolve().parents[3]
 
 
 def build_paths(project_root: Path, island: str, code: str, start: str, end: str) -> dict[str, Path]:
@@ -279,44 +284,55 @@ def main() -> None:
     )
     LOGGER.info("Area bbox=%s", area)
 
-    client = cdsapi.Client()
-    chunks = make_chunks(start, end, args.chunk_months)
-    LOGGER.info("Downloading %s chunk(s)", len(chunks))
+    if args.skip_download:
+        LOGGER.info("--skip-download set: reading existing 6-hourly parquet.")
+        existing = paths["six_hourly"]
+        if not existing.exists():
+            raise FileNotFoundError(
+                f"--skip-download requires the 6-hourly parquet to exist: {existing}"
+            )
+        df_6h = pd.read_parquet(existing)
+        LOGGER.info("Loaded %s rows from %s", len(df_6h), existing)
+    else:
+        client = cdsapi.Client()
+        chunks = make_chunks(start, end, args.chunk_months)
+        LOGGER.info("Downloading %s chunk(s)", len(chunks))
 
-    nc_paths: list[Path] = []
-    frames_6h: list[pd.DataFrame] = []
+        nc_paths: list[Path] = []
+        frames_6h: list[pd.DataFrame] = []
 
-    for chunk_start, chunk_end in chunks:
-        nc_name = f"cams_pm_{code}_{chunk_start.date()}_{chunk_end.date()}.nc"
-        nc_path = paths["raw_dir"] / nc_name
+        for chunk_start, chunk_end in chunks:
+            nc_name = f"cams_pm_{code}_{chunk_start.date()}_{chunk_end.date()}.nc"
+            nc_path = paths["raw_dir"] / nc_name
 
-        download_cams_chunk(
-            client=client,
-            start_date=chunk_start,
-            end_date=chunk_end,
-            area=area,
-            target_path=nc_path,
-        )
-        nc_paths.append(nc_path)
+            download_cams_chunk(
+                client=client,
+                start_date=chunk_start,
+                end_date=chunk_end,
+                area=area,
+                target_path=nc_path,
+            )
+            nc_paths.append(nc_path)
 
-        df_chunk = nc_to_six_hourly_df(nc_path)
-        frames_6h.append(df_chunk)
+            df_chunk = nc_to_six_hourly_df(nc_path)
+            frames_6h.append(df_chunk)
 
-    df_6h = concat_frames(frames_6h)
+        df_6h = concat_frames(frames_6h)
+
+        if not args.keep_nc:
+            for path in nc_paths:
+                try:
+                    path.unlink(missing_ok=True)
+                    LOGGER.info("Deleted temp NetCDF -> %s", path.name)
+                except Exception as exc:
+                    LOGGER.warning("Could not delete %s: %s", path.name, exc)
+
     df_daily = build_daily(df_6h)
     df_weekly = build_weekly(df_daily)
 
     save_table(df_6h, paths["six_hourly"], also_csv=args.also_csv)
     save_table(df_daily, paths["daily"], also_csv=args.also_csv)
     save_table(df_weekly, paths["weekly"], also_csv=args.also_csv)
-
-    if not args.keep_nc:
-        for path in nc_paths:
-            try:
-                path.unlink(missing_ok=True)
-                LOGGER.info("Deleted temp NetCDF -> %s", path.name)
-            except Exception as exc:
-                LOGGER.warning("Could not delete %s: %s", path.name, exc)
 
     LOGGER.info(
         "DONE 6h=%s daily=%s weekly=%s",
