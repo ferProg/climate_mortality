@@ -6,6 +6,23 @@
 
 ---
 
+## Abstract
+
+Calima events — Saharan dust intrusions — are a recurrent feature of Canary Islands 
+climate. This study investigates whether weeks with stronger calima conditions are 
+associated with higher all-cause mortality across the six main islands, using official 
+mortality (INE), meteorological (AEMET), and air quality data for the period 2016–2025.
+
+A composite calima proxy (AUC = 0.886) was constructed from PM10, PM2.5, visibility, 
+humidity, and temperature anomaly. Island-level analysis shows excess mortality of 
++17–18 deaths/week during intense calima episodes in Tenerife and Gran Canaria 
+(η² ≈ 0.054–0.058, p < 0.001), with consistent per-capita effects across islands 
+(+1.4–2.1 per 100,000). Multiple regression controlling for temperature, seasonality, 
+and mortality autocorrelation confirms the calima effect independently: β = +2.93 
+(Tenerife) and +1.77 (Gran Canaria) deaths per calima level increase (p < 0.001, 
+R² ≈ 0.46–0.49). A same-week and two-week delayed effect suggests both acute 
+exacerbation and inflammatory response mechanisms. All findings are observational.
+
 ## Executive Summary
 
 Saharan dust (calima) events are associated with a statistically significant increase in weekly all-cause mortality in Tenerife and Gran Canaria. After controlling for temperature, winter seasonality, and partial mediation via PM10, the adjusted effect is **+3.79 deaths/week (TFE)** and **+2.98 deaths/week (GC)** per unit increase in calima ordinal. At intense calima episodes, predicted excess mortality reaches **+11.4 deaths/week (TFE)** and **+8.9 deaths/week (GC)** relative to no-calima weeks. The dominant driver of winter mortality remains cold-season seasonality (Q1), with calima as a secondary but robust independent signal.
