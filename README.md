@@ -72,9 +72,34 @@ Calima events are a distinctive and recurrent feature of Canary Islands climate 
 
 This repository was built as a structured analytical project to investigate whether these conditions are associated with changes in weekly mortality patterns across islands, while keeping the limits of observational data explicit.
 
+
 ## Related literature
 
-This project is informed by existing environmental-health research on dust exposure, heat, air pollution, and mortality, including work relevant to Saharan dust episodes and the Canary Islands context.
+This project is informed by existing environmental-health research on dust exposure, 
+heat, air pollution, and mortality, including work relevant to Saharan dust episodes 
+and the Canary Islands context.
+
+Key references informing this work:
+
+- **Canary Islands (hospital cohort):** Domínguez-Rodríguez et al. (2020) found that 
+  86% of in-hospital heart failure deaths in Tenerife occurred during Saharan dust 
+  episodes with PM10 > 50 µg/m³ (OR = 2.79, adjusted). This project extends that 
+  finding to all-cause weekly mortality at population level across all major islands.
+
+- **Spain peninsular (time series):** Díaz et al. (2017) showed that PM10 during 
+  Saharan dust intrusions associates with daily mortality across Spanish regions — 
+  an effect absent on non-dust days. This project applies a comparable approach to 
+  the Canary Islands using a composite calima proxy (AUC 0.886) rather than PM10 alone.
+
+- **Barcelona (case-crossover):** Pérez et al. (2012) found cardiovascular mortality 
+  effects during Saharan dust days roughly double those on non-dust days. The lag 
+  structure observed here (lag0 + lag2) is consistent with that pattern.
+
+**Positioning:** Existing studies use daily resolution, cause-specific mortality, and 
+direct PM measurements. This project contributes a weekly all-cause analysis at island 
+and provincial scale (2016–2025), with a validated composite proxy and explicit 
+autocorrelation control — a methodological approach not previously applied to this 
+geographic context.
 
 
 ## Repository structure
