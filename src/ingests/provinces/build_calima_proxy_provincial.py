@@ -75,7 +75,7 @@ def load_island_calima(island_name: str, island_code: str) -> pd.DataFrame:
         CALIMA_DIR
         / island_name
         / "calima"
-        / f"calima_proxy_v2_weekly_{island_code}_{START_YEAR}_{END_YEAR}.parquet"
+        / f"calima_proxy_weekly_{island_code}_{START_YEAR}_{END_YEAR}.parquet"
     )
     if not path.exists():
         log.warning(f"  ⚠ File not found: {path}")

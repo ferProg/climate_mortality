@@ -1,13 +1,27 @@
-pandas
+# climate_mortality — Python dependencies
+# Environment: ds-env (Windows, Python 3.x)
+# Last verified: 2026-05-14
 
-numpy
+# Core data manipulation
+pandas==2.3.3
+numpy==2.4.1
 
-requests
+# Parquet I/O
+pyarrow==23.0.1
 
-openpyxl
+# Visualisation
+matplotlib==3.10.8
+matplotlib-inline==0.2.1
+seaborn==0.13.2
 
-matplotlib
+# Statistical modelling and regression
+statsmodels==0.14.6
+scipy==1.17.0
+scikit-learn==1.8.0
 
-statsmodels (optional, for time-series/regression)
+# Excel I/O
+openpyxl==3.1.5
 
-scikit-learn (optional)
+# HTTP requests and caching (AEMET API, CAMS downloads)
+requests==2.32.5
+requests-cache==1.3.0

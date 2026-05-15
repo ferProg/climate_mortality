@@ -1,5 +1,5 @@
 """
-build_calima_proxy_v2.py
+build_calima_proxy.py
 
 Construye proxy de calima v2 en dos fases:
 
@@ -14,10 +14,10 @@ Fase 2: Construye calima proxy v2
   - Interpola/imputa valores faltantes (interpolación lineal + media global)
   - Computa calima_proxy_score (pesos: PM10 1.0, PM2.5 0.75, vis 0.5, humedad 0.25, tmax 0.5)
   - Genera calima_proxy_level (0, 1, 2, 3)
-  - Guarda en data/processed/<island>/calima/calima_proxy_v2_weekly_<island_code>_<YYYY>_<YYYY>.parquet
+  - Guarda en data/processed/<island>/calima/calima_proxy_weekly_<island_code>_<YYYY>_<YYYY>.parquet
 
 Uso:
-   python src\master\calima_per_island\build_calima_proxy_v2.py --island <island> --start-year <YYYY> --end-year <YYYY>
+   python src\master\calima_per_island\build_calima_proxy.py --island <island> --start-year <YYYY> --end-year <YYYY>
 """
 
 import argparse
@@ -186,7 +186,7 @@ def phase2_build_calima_proxy(root, island, island_code, start_year, end_year, m
     - Interpola/imputa variables faltantes
     - Calcula score normalizado por variables disponibles
     - Genera calima_proxy_level (0, 1, 2, 3)
-    - Save to data/processed/<island>/calima/calima_proxy_v2_weekly_<island_code>_<YYYY>_<YYYY>.parquet
+    - Save to data/processed/<island>/calima/calima_proxy_weekly_<island_code>_<YYYY>_<YYYY>.parquet
     """
     print(f"\n{'='*70}")
     print(f"PHASE 2: Build calima proxy v2 for {island.upper()}")
@@ -283,7 +283,7 @@ def phase2_build_calima_proxy(root, island, island_code, start_year, end_year, m
     # Save to processed/calima
     calima_dir = root / f"data/processed/{island}/calima"
     calima_dir.mkdir(parents=True, exist_ok=True)
-    output_fp = calima_dir / f"calima_proxy_v2_weekly_{island_code}_{start_year}_{end_year}.parquet"
+    output_fp = calima_dir / f"calima_proxy_weekly_{island_code}_{start_year}_{end_year}.parquet"
 
     output_df.to_parquet(output_fp, index=False)
     print(f"\n✓ Saved calima proxy v2 to: {output_fp}")

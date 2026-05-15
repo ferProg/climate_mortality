@@ -1,0 +1,15 @@
+model,island,predictor,beta,p_value,significant
+Model3,tenerife,Intercept,93.04,1.0931881065463256e-14,True
+Model3,tenerife,calima_ordinal,2.9344,0.00021183353214994626,True
+Model3,tenerife,temp_c_mean,-1.0268,0.02344141973961685,True
+Model3,tenerife,Q_1,6.0476,0.01488139834450441,True
+Model3,tenerife,Q_2,-4.0289,0.05209941703242356,False
+Model3,tenerife,Q_3,-1.6062,0.5310488499524163,False
+Model3,tenerife,deaths_lag1,0.4878,1.0785181480936393e-32,True
+Model3,gran_canaria,Intercept,77.3538,8.496180810536874e-12,True
+Model3,gran_canaria,calima_ordinal,1.7674,0.01382782962042213,True
+Model3,gran_canaria,temp_c_mean,-0.8454,0.05057782911417612,False
+Model3,gran_canaria,Q_1,2.7377,0.2230100189196009,False
+Model3,gran_canaria,Q_2,-3.6843,0.05216891463377035,False
+Model3,gran_canaria,Q_3,-1.7958,0.45709235078378674,False
+Model3,gran_canaria,deaths_lag1,0.5606,1.4424918582369668e-42,True

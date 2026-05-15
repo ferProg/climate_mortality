@@ -8,6 +8,17 @@ It is designed as a structured, reproducible analytical workflow rather than a s
 
 The Canary Islands are used as a case study due to their frequent Saharan dust intrusions ("calima"), strong seasonal patterns, and relatively well-defined environmental conditions, which make exposure patterns easier to observe at an island level.
 
+## Quick Navigation
+
+| Document | Description |
+|---|---|
+| [FINDINGS.md](FINDINGS.md) | Executive summary — regression results, effect sizes, diagnostics |
+| [REPRODUCIBILITY.md](REPRODUCIBILITY.md) | How to reproduce the full pipeline from source data |
+| [VALIDATION.md](VALIDATION.md) | Calima proxy validation — AUC, CAP alignment, QA results |
+| `regression_tfe_gc_modeling.ipynb` | Full regression notebook (TFE + GC) |
+| `islands/tenerife/` | Island-level EDA — Tenerife |
+| `islands/gran_canaria/` | Island-level EDA — Gran Canaria |
+
 
 
 ## Why this project matters
@@ -206,11 +217,33 @@ Scripts: `src/ingests/provinces/` + `src/master/ccaa/`
 
 ## Current status and next steps
 
-Island-level EDA is complete (v2). Provincial masters generated (2026-04-28). The next phase:
+**🟢 PROJECT PHASE: CLOSURE AND PUBLICATION (as of May 7, 2026)**
 
-1. **Provincial EDA** — SC Tenerife + Las Palmas: correlación calima intensa vs deaths_per_100k, η² provincial vs η² insular ← **próximo**
-2. **CCAA EDA** — tabla η² multinivel (isla → provincia → CCAA)
-3. **Multivariate regression** — deaths/100k ~ calima_score + season + controls (planned after provincial EDA)
+Analytical work is **complete**:
+- ✅ Island-level EDA (Phase 1): all 6 islands analyzed
+- ✅ Provincial-level EDA (Phase 2): SC Tenerife η² = 0.0563
+- ✅ CCAA-level EDA (Phase 4): η² multinivel table complete  
+- ✅ Synthesis + regression decision (Phase 5): island-level regression specified (TFE + GC)
+- ✅ Feature engineering (May 5): calima_level categories, lags, seasonality dummies
+- ✅ Data verification (May 7): CSV lock complete, codebook complete
+
+**Regresión modeling** (simple + multiple + diagnostics + model comparison) was completed on **May 5** in `regression_tfe_gc_modeling.ipynb`.
+
+**Regression validation (May 14, 2026):**
+- Model 3 (lag predictor) confirmed for both TFE and GC
+- Autocorrelation fix: DW 0.79→2.30 (Tenerife), 0.93→2.36 (Gran Canaria) ✅
+- Lag-1 mortality: significant predictor (β>0, p<0.05) for both islands
+- Calima ordinal effect confirmed: β=+2.93 (TFE, p<0.05), β=+1.77 (GC, p<0.05)
+- R² ≈ 0.464 (TFE), 0.486 (GC) with autocorrelation control
+- Model diagnostics: Shapiro-Wilk W>0.99, DW≥2.30, AIC/BIC compared
+- **Alert closed:** DW autocorrelation issue fully resolved
+
+**Next steps for publication:**
+1. Review project structure and documentation completeness
+2. Compile write-up / analytical summary
+3. Organize figures and tables for presentation
+4. Finalize repository structure for public release
+5. Peer review / final verification before publication
 
 ## License
 

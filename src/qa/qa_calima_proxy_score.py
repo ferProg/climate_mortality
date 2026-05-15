@@ -3,7 +3,7 @@ Para esta variable, este script merge el master con calima_proxy y luego compara
 -> hay que pasarles como argumentos donde se encuentra el calima_proxy y el master parquets
 Lo Que Hace Este Script
 No es una "validación que rechaza/acepta". Es un diagnóstico.
-Lee: qa_calima_proxy_score_v2.py → genera reportes que te muestran:
+Lee: qa_calima_proxy_score.py → genera reportes que te muestran:
 
 ¿Está el proxy completo? (missing_pct, missing_by_year, missing_by_month)
 ¿Qué rango tiene? (mean, min, max, p95, p99)
@@ -75,8 +75,8 @@ def main():
 
     # Keep only needed calima columns
     keep = ["week_start", var]
-    if "calima_proxy_level_v2" in c.columns:
-        keep.append("calima_proxy_level_v2")
+    if "calima_proxy_level" in c.columns:
+        keep.append("calima_proxy_level")
     c = c[keep].copy()
 
     # Merge on week_start (master timeline)

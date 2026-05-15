@@ -61,8 +61,8 @@ def main():
 
     # Merge on week_start (inner — only weeks present in both)
     df = pd.merge(
-        df_sct[["week_start", "deaths", "population", "calima_sct"]],
-        df_lp[["week_start",  "deaths", "population", "calima_lp"]],
+        df_sct[["week_start", "deaths", "population", "calima_sct", "pop_intense"]],
+        df_lp[["week_start",  "deaths", "population", "calima_lp", "pop_intense"]],
         on="week_start",
         how="inner",
         suffixes=("_sct", "_lp")
@@ -77,6 +77,13 @@ def main():
     # Calima columns
     df["calima_any"]  = df["calima_sct"] | df["calima_lp"]
     df["calima_both"] = df["calima_sct"] & df["calima_lp"]
+    df["pop_intense"]      = df["pop_intense_sct"] + df["pop_intense_lp"]
+    df["pct_exposed_ccaa"] = df["pop_intense"] / df["population"]
+
+    df["calima_level_ccaa"] = "no_calima"
+    df.loc[df["pct_exposed_ccaa"] >= 0.25, "calima_level_ccaa"] = "possible"
+    df.loc[df["pct_exposed_ccaa"] >= 0.50, "calima_level_ccaa"] = "probable"
+    df.loc[df["pct_exposed_ccaa"] >= 0.75, "calima_level_ccaa"] = "intense"
 
     # Final column order
     df = df[[
@@ -89,6 +96,9 @@ def main():
         "calima_lp",
         "calima_any",
         "calima_both",
+        "pop_intense",
+        "pct_exposed_ccaa",
+        "calima_level_ccaa"
     ]].sort_values("week_start").reset_index(drop=True)
 
     # Sanity checks
@@ -99,7 +109,7 @@ def main():
     log.info(f"  calima_both episodes: {df['calima_both'].sum()} / {len(df)}")
     log.info(f"  calima_sct only:      {(df['calima_sct'] & ~df['calima_lp']).sum()}")
     log.info(f"  calima_lp only:       {(df['calima_lp'] & ~df['calima_sct']).sum()}")
-
+    log.info(f"  calima_level_ccaa:\n{df['calima_level_ccaa'].value_counts().to_string()}")
     # Save
     out_path = OUTPUT_DIR / f"master_ccaa_canarias_{START_YEAR}_{END_YEAR}.parquet"
     df.to_parquet(out_path, index=False)
