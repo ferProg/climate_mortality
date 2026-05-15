@@ -153,10 +153,22 @@ Calima Proxy v2 extended to provincial scale with consistent methodology:
 
 **Key finding:** Provincial η² (0.0563) ≈ insular η² (TFE 0.0541, GC 0.0058) → signal strengthens or maintains (NOT diluted) with aggregation. Confirms genuine per-capita mechanism across scales.
 
+**Regression analysis (TFE + GC, Model 3 — final):**
+
+| Island | β calima (adjusted) | p-value | R² | DW |
+|---|---|---|---|---|
+| Tenerife | +2.93 deaths/week per calima level | <0.001 | 0.464 | 2.30 ✅ |
+| Gran Canaria | +1.77 deaths/week per calima level | <0.001 | 0.486 | 2.36 ✅ |
+
+Model: `deaths_week ~ calima_ordinal + temp_c_mean + Q_1 + Q_2 + Q_3 + deaths_lag1`  
+Controls: temperature, seasonality (quarterly dummies), mortality autocorrelation.  
+Calima effect survives full adjustment. See [FINDINGS.md](reports/FINDINGS.md) for full results.
+
 All findings are descriptive and associational, not causal.
 
 ## Limitations
 
+- weekly mortality data exhibits positive autocorrelation; addressed in the final model via a one-week mortality lag predictor (DW improved from ~1.0 to 2.30–2.36)
 - the project currently works at **weekly** resolution, which limits temporal precision
 - strong seasonality can confound simple associations
 - CAP alerts are only usable from 2018 onward in the current workflow
@@ -195,25 +207,15 @@ Each island contains a dedicated notebook and summary.
 - Calima Proxy v2 extended to provincial scale with population-weighted aggregation
 - Methodology blocker resolved: proxy now includes continuous score + categorical levels (consistent with island-level)
 
-**Phase 3 — Las Palmas provincial:** ⏳ In progress
-- Master generated (Apr 28), EDA template validated (Apr 29)
-- Ready to replicate SC Tenerife template
+**Phase 3 — Las Palmas provincial:** ✅ Complete
 
-**Phase 4–5:** ⏳ Pending
-- CCAA-level EDA (expected May 2)
-- Synthesis + regression specification (expected May 2)
+**Phase 4 — CCAA-level EDA:** ✅ Complete
+- η² multinivel table complete (isla → provincia → CCAA)
 
-| Master | Filas | Deaths nulls | Calima nulls | Intense episodes |
-|--------|-------|--------------|--------------|-----------------|
-| `master_provincial_sc_tenerife_2016_2025.parquet` | 522 | 0 | 0 | 49 |
-| `master_provincial_las_palmas_2016_2025.parquet` | 522 | 0 | 0 | 46 |
-| `master_ccaa_canarias_2016_2025.parquet` | 522 | 0 | 0 | 58 (any) / 37 (both) |
-
-CCAA master includes 4 calima columns: `calima_sct`, `calima_lp`, `calima_any`, `calima_both`.
-
-Deaths/100k ranges: SC Tenerife 10.56–23.55 · Las Palmas 9.53–21.28 · CCAA 10.49–21.67.
-
-Scripts: `src/ingests/provinces/` + `src/master/ccaa/`
+**Phase 5 — Regression modeling (TFE + GC):** ✅ Complete (May 14, 2026)
+- Model 3 selected: calima_ordinal + temp_c_mean + seasonality + deaths_lag1
+- Autocorrelation resolved (DW 0.79 → 2.30–2.36)
+- Calima effect confirmed post-adjustment: β = +2.93 (TFE), +1.77 (GC)
 
 ## Current status and next steps
 
