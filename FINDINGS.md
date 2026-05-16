@@ -18,14 +18,15 @@ humidity, and temperature anomaly. Island-level analysis shows excess mortality 
 +17–18 deaths/week during intense calima episodes in Tenerife and Gran Canaria 
 (η² ≈ 0.054–0.058, p < 0.001), with consistent per-capita effects across islands 
 (+1.4–2.1 per 100,000). Multiple regression controlling for temperature, seasonality, 
-and mortality autocorrelation confirms the calima effect independently: β = +2.93 
-(Tenerife) and +1.77 (Gran Canaria) deaths per calima level increase (p < 0.001, 
-R² ≈ 0.46–0.49). A same-week and two-week delayed effect suggests both acute 
-exacerbation and inflammatory response mechanisms. All findings are observational.
+and mortality autocorrelation (via lagged mortality) confirms the calima effect independently: 
+β = +2.93 (Tenerife) and +1.77 (Gran Canaria) deaths per calima level increase (p < 0.05, 
+R² ≈ 0.46–0.49). Autocorrelation resolved with Durbin-Watson 2.30–2.36 (from 0.79–0.93). 
+A same-week and two-week delayed effect suggests both acute exacerbation and inflammatory 
+response mechanisms. All findings are observational.
 
 ## Executive Summary
 
-Saharan dust (calima) events are associated with a statistically significant increase in weekly all-cause mortality in Tenerife and Gran Canaria. After controlling for temperature, winter seasonality, and partial mediation via PM10, the adjusted effect is **+3.79 deaths/week (TFE)** and **+2.98 deaths/week (GC)** per unit increase in calima ordinal. At intense calima episodes, predicted excess mortality reaches **+11.4 deaths/week (TFE)** and **+8.9 deaths/week (GC)** relative to no-calima weeks. The dominant driver of winter mortality remains cold-season seasonality (Q1), with calima as a secondary but robust independent signal.
+Saharan dust (calima) events are associated with a statistically significant increase in weekly all-cause mortality in Tenerife and Gran Canaria. After controlling for temperature, winter seasonality, and mortality autocorrelation (lagged mortality term), the adjusted effect is **+2.93 deaths/week (TFE)** and **+1.77 deaths/week (GC)** per unit increase in calima ordinal (p < 0.05). The model explains **46–49% of variance** (R² = 0.464–0.486) and resolves autocorrelation completely (Durbin-Watson: 2.30–2.36 vs 0.79–0.93 in baseline). Weekly mortality exhibits strong inertia (β_lag1 ≈ 0.49–0.56), indicating mortality in week t is substantially determined by week t-1. Calima signal persists as an independent risk factor even after accounting for this autocorrelation. All findings are observational.
 
 ---
 
@@ -44,29 +45,32 @@ Saharan dust (calima) events are associated with a statistically significant inc
 
 ---
 
-## Table 2 — Multiple Regression Coefficients (Model 1)
+## Table 2 — Multiple Regression Coefficients (Model 3 — FINAL)
 
-**Final model:** `deaths_week ~ calima_ordinal + temp_c_mean + Q1 + Q2 + Q3`
+**Final model:** `deaths_week ~ calima_ordinal + temp_c_mean + Q1 + Q2 + Q3 + deaths_lag1`
 
 | Predictor | Tenerife β | Gran Canaria β | Interpretation |
 |---|---|---|---|
-| calima_ordinal | +3.79** | +2.98** | Primary effect of interest |
-| temp_c_mean | −1.67 | −1.78 | Cold = more deaths (classic) |
-| Q1 (winter) | +14.9 | +11.6 | Dominant seasonal driver |
-| Q2 (spring) | reference | reference | — |
-| Q3 (summer) | — | — | — |
+| Intercept | 93.04** | 77.35** | Baseline mortality (with lag control) |
+| calima_ordinal | +2.93** | +1.77* | **Primary effect (autocorr. controlled)** |
+| temp_c_mean | −1.03* | −0.85 | Cold = more deaths (attenuated by lag) |
+| Q1 (winter) | +6.05* | +2.74 | Seasonal driver (attenuated by lag) |
+| Q2 (spring) | −4.03 | −3.68 | Non-significant with lag control |
+| Q3 (summer) | −1.61 | −1.80 | Non-significant |
+| **deaths_lag1** | **+0.49*** | **+0.56*** | **Strong mortality inertia** |
 
-** p < 0.001
+* p < 0.05 | ** p < 0.01 | *** p < 0.001
 
 **Model fit:**
 
 | Metric | Tenerife | Gran Canaria |
 |---|---|---|
-| R² | 0.292 | 0.258 |
-| Normality (Shapiro-Wilk W) | 0.985 | 0.991 |
-| Autocorrelation (DW) | not tested | not tested |
+| R² | **0.464** | **0.486** |
+| Adj. R² | 0.458 | 0.480 |
+| Normality (Shapiro-Wilk W) | 0.9908 | 0.9915 |
+| **Autocorrelation (DW)** | **2.303 ✅** | **2.355 ✅** |
 
-> **Note:** Model 2 (+ humidity + PM10) used as sensitivity analysis only. Calima loses significance in Model 2 due to partial mediation via PM10 pathway — PM10 is a mediator, not an independent confounder. Model 1 selected as primary model.
+> **Model Selection:** Model 3 (+ deaths_lag1) is the **final primary model**. It resolves autocorrelation completely (DW: 0.79→2.30 TFE, 0.93→2.36 GC), improves R² by 60% (0.29→0.46), and retains calima significance. Model 2 (+ humidity + PM10) used as sensitivity analysis only — calima loses significance due to partial mediation via PM10 pathway, not confounding.
 
 ---
 
@@ -102,20 +106,23 @@ Saharan dust (calima) events are associated with a statistically significant inc
 
 ## Limitations
 
-- OLS assumes independence of observations — weekly mortality data may have autocorrelation (Durbin-Watson not tested; flagged for Week 7).
+- **Autocorrelation tested & resolved:** Durbin-Watson = 2.30 (TFE) / 2.36 (GC) via deaths_lag1 predictor. Model 3 addresses this Week 7 priority.
 - Calima proxy v2 is a weighted composite (CAMS + visibility + tmax anomaly) — not a direct PM10 or AOD measure.
 - 2016–2017 period has no CAP alerts data; proxy relies on CAMS + visibility only.
-- Model explains ~29% of variance — substantial unexplained variation remains.
+- Model explains ~46–49% of variance — substantial unexplained variation remains (e.g., healthcare access, age structure, infectious disease cycles).
+- Lagged calima terms (lag1/lag2) not explored in final model — deferred to Week 8 (added deaths_lag1 prioritized for autocorrelation fix).
 
 ---
 
-## Next Steps
+## Completed Tasks (Week 7)
 
-- [ ] Test for autocorrelation (Durbin-Watson) — Week 7 priority
-- [ ] Add lagged calima terms to final model
-- [ ] Extend to interaction terms (calima × season)
-- [ ] Replicate methodology for remaining islands
+- [x] Test for autocorrelation (Durbin-Watson) — **COMPLETED:** DW 0.79→2.30 (TFE), 0.93→2.36 (GC)
+- [x] Add lagged mortality term to control autocorrelation — **COMPLETED:** deaths_lag1 predictor, β ≈ 0.49–0.56, p < 0.001
+- [x] AIC/BIC model comparison (not R² only) — **COMPLETED:** Model 3 selected by AIC/BIC
+- [ ] Lagged calima terms (lag1/lag2) as predictors — **DEFERRED to Week 8**
+- [ ] Extend to interaction terms (calima × season) — **DEFERRED to Week 8**
+- [ ] Replicate methodology for remaining islands (La Palma, Gomera, Hierro) — **DEFERRED to Week 8**
 
 ---
 
-*Generated: 2026-05-11 | Source: `regression_tfe_gc_modeling.ipynb`*
+*Updated: 2026-05-16 (Model 3 final) | Original: 2026-05-11 | Source: `regression_tfe_gc_modeling.ipynb`*
