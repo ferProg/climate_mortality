@@ -101,3 +101,26 @@ The calima-mortality association is not confounded by seasonal patterns (verifie
 
 ### Scalability
 The project was designed island-first rather than top-down from the autonomous community (CCAA) level — a known structural limitation accepted due to time constraints. Provincial and CCAA-level analyses aggregate island results but do not re-run the full pipeline at higher resolution.
+
+# Model comparison
+
+| Term | β | SE | p-value |
+|------|---|----|---------|
+| calima_ordinal | 0.939 | 1.046 | 0.369 |
+| Q_1 (vs Q_4) | +5.597 | 2.013 | 0.006 ** |
+| Q_2 (vs Q_4) | -4.125 | 1.692 | 0.015 * |
+| Q_3 (vs Q_4) | -3.599 | 1.904 | 0.059 |
+| calima_ordinal:Q_1 | -1.198 | 1.255 | 0.340 |
+| calima_ordinal:Q_2 | -0.308 | 1.741 | 0.860 |
+| calima_ordinal:Q_3 | +1.703 | 1.564 | 0.277 |
+| tmax_c_mean | -0.568 | 0.277 | 0.040 * |
+| humidity_mean | -0.225 | 0.093 | 0.016 * |
+| deaths_lag1 | 0.537 | 0.027 | <0.001 *** |
+
+**R² = 0.478 | Adj. R² = 0.472 | DW = 2.360**
+
+### F-test vs Model 3 (no interaction)
+| | df_resid | SSR | df_diff | SS_diff | F | p-value |
+|---|---|---|---|---|---|---|
+| Model 3 | 1033 | 256,666.1 | — | — | — | — |
+| Model 4 | 1030 | 255,804.7 | 3 | 861.4 | 1.156 | 0.325 |
