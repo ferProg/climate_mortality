@@ -35,6 +35,9 @@ Secondary questions include:
 - whether the signal differs across islands
 - whether dust and heat overlap or confound each other
 
+![Cross-island calima-mortality effect (normalized)](reports/islands/figures/cross_island/cross_island_delta_normalized.png)
+*Comparative analysis of calima-related mortality changes across the six main islands.*
+
 ## Data sources
 
 This project integrates multiple official and research-relevant sources:
