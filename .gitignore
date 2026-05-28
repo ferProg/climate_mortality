@@ -17,16 +17,15 @@ data/processed/
 # Logs and notes
 logs/
 notes/
-notebooks/.ipynb_checkpoints/
+
+# Jupyter
+notebooks/
 **/.ipynb_checkpoints/
 __pycache__/
 *.pyc
 .env
 *.env
-# Scratch / temp files
 
-
-# Non-public exploratory notebooks
-notebooks/SESSION_BLOCK_CLOSE_*.md
-SESSION_BLOCK_CLOSE_*.md
+# Internal project tracking (not for public repo)
+ALERTS_STATUS.md
 SESSION_BLOCK_CLOSE_*.md

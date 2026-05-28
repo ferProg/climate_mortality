@@ -59,6 +59,13 @@ STATIONS_BY_ISLAND: Dict[str, List[str]] = {
         "Médano",
         "San Isidro",
         "Tajao",
+        "Viera y Clavijo",
+        "Refinería",
+        "Mercatenerife",
+        "Los Gladiolos",
+        "Los Gladiolos-Sta Cruz TF",
+        "Buzanada",
+        "Igueste Sanidad",
     ],
     "gcan": [
         "Mercado Central",
@@ -152,7 +159,7 @@ def normalize_station_name(name: str) -> str:
 # Excel parsing
 # -----------------------------------------------------------------------------
 def build_year_file(root: Path, year: int) -> Path:
-    return root / f"Datos{year}" / f"Datos {year}.xlsx"
+    return root / f"{year}_stations.xlsx"
 
 
 def get_calendar_for_year(year: int) -> pd.DataFrame:
@@ -213,14 +220,18 @@ def read_station_sheet(excel_path: Path, sheet_name: str) -> pd.DataFrame:
     - later, sometimes a second duplicated block starts at a column named 'FECHA'
       that must be ignored completely.
     """
-    df = pd.read_excel(excel_path, sheet_name=sheet_name, header=1)
+    # Auto-detect header row: row 0 if it contains 'Fecha', else row 1
+    probe = pd.read_excel(excel_path, sheet_name=sheet_name, header=None, nrows=2)
+    header_row = 0 if str(probe.iloc[0, 0]).strip().lower() == "fecha" else 1
+    df = pd.read_excel(excel_path, sheet_name=sheet_name, header=header_row)
+    df.columns = [str(c).strip() for c in df.columns]
 
     raw_cols = [str(c).strip() for c in df.columns]
     df.columns = raw_cols
 
     second_block_idx = None
     for i, col in enumerate(df.columns):
-        if col == "FECHA":
+        if col == "FECHA" and i > 0:
             second_block_idx = i
             break
 
@@ -232,6 +243,7 @@ def read_station_sheet(excel_path: Path, sheet_name: str) -> pd.DataFrame:
 
     rename_map = {
         "Fecha": "date",
+        "FECHA": "date",
         "Hora": "hour",
         "SO2": "SO2",
         "NO": "NO",
@@ -419,8 +431,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--end-year", required=True, type=int, help="Last year inclusive")
     parser.add_argument(
         "--root",
-        default=r"C:\data\Air_Polution_GC_2015_2025_raw\Datos2016_2025",
-        help="Root folder containing DatosYYYY/Datos YYYY.xlsx",
+        default=r"C:\data\Air_Quallity_Canary",
+        help="Root folder containing YYYY_stations.xlsx files",
     )
     parser.add_argument(
         "--outdir",

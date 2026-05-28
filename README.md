@@ -241,7 +241,7 @@ Start from the island-level analyses:
 
 Each island contains a dedicated notebook and summary.
 
-## Phases (updated 2026-04-29)
+## Phases (updated 2026-05-28)
 
 **Phase 1 — Island-level EDA:** ✅ Complete (Apr 26)
 - 6 islands, Calima Proxy v2 (AUC 0.886), consistent methodology across islands
@@ -262,17 +262,95 @@ Each island contains a dedicated notebook and summary.
 - Autocorrelation resolved (DW 0.79 → 2.30–2.36)
 - Calima effect confirmed post-adjustment: β = +2.93 (TFE), +1.77 (GC)
 
+**Phase 6 — Provincial Regression Modeling:** ✅ Complete (May 28, 2026)
+- Period: 2009–2025 (886 weeks after lag), consistent with CCAA model
+- Masters provinciales construidos desde masters insulares: `master_provincial_<prov>_2009_2025.parquet`
+- Model P1 (OLS + lag + interaction) and P2 (first-difference HC3 robust) for both provinces
+- **SC Tenerife P2:** β = +7.48, p = 0.014 ✅ (95% CI: [1.50, 13.47]) — señal robusta
+- **Las Palmas P2:** β = +2.50, p = 0.429 ❌ — sin señal significativa
+- SC Tenerife P1: β = +8.82, p = 0.498; R² = 0.579, DW = 2.48
+- Las Palmas P1: β = +4.50, p = 0.775; R² = 0.655, DW = 2.54
+- DW ~2.9–3.0 en P2: ligera sobre-diferenciación, documentada como limitación
+- Key finding: SC Tenerife calima signal survives first-differencing (2009–2025); Las Palmas does not
+- Notebook: `provinces/model_p1_p2_provinces.ipynb`
+- Figures: `reports/provinces/figures/` | Tables: `reports/provinces/tables/`
+
 ## Current status and next steps
 
-**🟢 PROJECT PHASE: CLOSURE AND PUBLICATION (as of May 7, 2026)**
+**🟢 PROJECT PHASE: WEEK 10 PROVINCIAL REGRESSION COMPLETE (as of May 28, 2026)**
 
-Analytical work is **complete**:
+Analytical work progress (Week 9 — Climate Mortality v2 Regional Scope):
+
+**CCAA Regional Regression Modeling** (May 28, 2026):
+- ✅ **Fase 5a — Model P1 Specification (Baseline):** 
+  - Specification: `deaths_regional ~ calima_score + lag_deaths + month + calima×lag interaction + temperature`
+  - OLS regression fitted for full regional CCAA dataset (2009–2025, 887 weeks)
+  - Durbin-Watson test computed; model diagnostics documented
+- ✅ **Fase 5b — Model P2 Diagnostics (Primary, HC3 Robust):**
+  - Residual analysis: linearity, homoscedasticity, autocorrelation validated
+  - **Key finding:** Calima β = +12.51, p = 0.025 (HC3 robust SE)
+  - Diagnostic plots generated; assumptions verified
+  - Model 5 summary table: β, SE, p-values, 95% CI, AIC/BIC complete
+- ✅ **Fase 7 — Documentation & Regional Synthesis:**
+  - `FINDINGS_v2.md` generated: insular v1 + regional v2 integrated narrative
+  - Regional vs insular comparison documented
+  - Caveats and limitations added; climate_mortality v1 repo linked
+  - GitHub push prepared
+
+**Notebook location:** `reports/ccaa/model_p1_p2.ipynb` (primary regional regression analysis)
+
+**Previous work (completed May 5–27, 2026):**
 - ✅ Island-level EDA (Phase 1): all 6 islands analyzed
 - ✅ Provincial-level EDA (Phase 2): SC Tenerife η² = 0.0563
 - ✅ CCAA-level EDA (Phase 4): η² multinivel table complete  
 - ✅ Synthesis + regression decision (Phase 5): island-level regression specified (TFE + GC)
 - ✅ Feature engineering (May 5): calima_level categories, lags, seasonality dummies
 - ✅ Data verification (May 7): CSV lock complete, codebook complete
+
+**Air quality pipeline (May 25, 2026):**
+
+**Fase 1 — Data ingestion (2004–2025):** ✅ COMPLETADA
+- ✅ EEA Historical ingest (2000–2012): 41 parquets downloaded + validated → `data/raw/historical/`
+- ✅ Gobierno de Canarias ingest (2004–2024): Excel files parsed from `C:\data\Air_Quallity_Canary\YYYY_stations.xlsx`
+- ✅ Data period decision: Adjusted from original 1996–2015 → **2004–2025** (pre-2004 data not available in any digital source)
+  - EEA Historical: validated for 2000–2012 ✓
+  - Gobierno de Canarias portal: earliest available 2004 ✓
+  - AEMET archive: no PM10 pre-2004
+  - Literature (López Villarrubia et al. 2008): pre-2004 only in printed reports (not digitized)
+- ✅ Weekly aggregation (7 islands): Parquets generated with PM10 nullness metrics
+  - `weekly_tfe_2004_2025.parquet` — 1149 weeks, PM10 nulls 18%
+  - `weekly_gcan_2005_2025.parquet` — 1097 weeks, PM10 nulls 14%
+  - `weekly_lzt_2005_2025.parquet` — 1097 weeks, PM10 nulls 14%
+  - `weekly_ftv_2005_2025.parquet` — 1097 weeks, PM10 nulls 29%
+  - `weekly_lpa_2005_2025.parquet` — 1097 weeks, PM10 nulls 24%
+  - `weekly_gom_2013_2025.parquet` — 661 weeks, PM10 nulls 7%
+  - El Hierro: not processed (insufficient station data)
+
+**Script improvements (May 25, 2026):**
+- ✅ Fixed 4 bugs in `build_airq_daily.py`:
+  1. Header row auto-detection (probe row 0-1 for "Fecha")
+  2. FECHA uppercase mapping in `rename_map` 
+  3. Second block detection with `i > 0` condition (avoid false positives)
+  4. Column name stripping with `.strip()` before processing
+- ✅ Added 6 new stations to `STATIONS_BY_ISLAND["tfe"]`: Los Gladiolos, Viera y Clavijo, Refinería, Mercatenerife, Buzanada, Igueste Sanidad
+- ⚠️ `build_pollutants_2000_2025.py` created but NOT used — Excel parser has unresolved bugs (double block handling). Existing scripts (`build_airq_daily.py` + `build_weekly_airq_island.py`) more reliable.
+
+**Fases 2a/2b — Regional proxy v3:** ✅ COMPLETADA (May 25, 2026)
+- ✅ AEMET weather (2004–2015 API + 2016–2025 historical) downloaded → 7 islands, daily resolution
+- ✅ NOAA ISD visibility (2004–2015 + 2016–2025) downloaded + 12 UTC filtered → 7 islands
+- ✅ INE deaths (2004–2015) constructed → 6 islands (El Hierro deferred)
+- ✅ Masters (2004–2025) built: 1149 weeks × 49 columns
+- ✅ Calima proxy v2 island-level (PM10 + PM2.5 + visibility + humidity + tmax_anomaly)
+- ✅ **Calima proxy v3 REGIONAL (population-weighted aggregation):**
+  - Weights: TFE 43%, GC 39%, LZT 7%, FTV 6%, LPA 4%, GOM 1%
+  - Distribution (1149 weeks): 54% no_calima, 28% possible, 13% probable, 5% intense
+  - Status: Ready for DAI validation
+  - 🟡 Alert: Gomera PM10 45% nulls, PM2.5 54% nulls (interpolated) — weight in regional 1% only
+
+**Phase 3 — Proxy v3 validation:** ⏳ PRÓXIMA SESIÓN
+- Validate proxy v3 regional against DAI (2004–2022 overlap, correlation target ≥ 0.70)
+- Timeline/scatter visualization
+- QA checks: nullness, temporal coverage, type consistency
 
 **Regresión modeling** (simple + multiple + diagnostics + model comparison) was completed on **May 5** in `regression_tfe_gc_modeling.ipynb`.
 
@@ -285,12 +363,32 @@ Analytical work is **complete**:
 - Model diagnostics: Shapiro-Wilk W>0.99, DW≥2.30, AIC/BIC compared
 - **Alert closed:** DW autocorrelation issue fully resolved
 
+**Phase 6 — Provincial Regression (May 28, 2026):** ✅ COMPLETE
+- ✅ Model P1 & P2 for SC Tenerife: calima β=+7.66, p=0.043 (P2 HC3)
+- ✅ Model P1 & P2 for Las Palmas: calima β=+0.93, p=0.779 (no signal)
+- ✅ Diagnostic plots (residuals, Q-Q, time series) for all 4 models
+- ✅ Multi-scale comparison table (insular → provincial → CCAA)
+- ✅ `provinces/model_p1_p2_provinces.ipynb`
+
+**Multi-scale calima effect summary (Model P2 HC3):**
+
+| Scale | β calima | p-value | R² | DW | n |
+|---|---|---|---|---|---|
+| Island — Tenerife | +2.93 (ordinal) | <0.001 | 0.464 | 2.30 | 522 |
+| Island — Gran Canaria | +1.77 (ordinal) | <0.001 | 0.486 | 2.36 | 522 |
+| Province — SC Tenerife | +7.48 (score) | 0.014 ✅ | 0.024 | 2.98 | 886 |
+| Province — Las Palmas | +2.50 (score) | 0.429 ❌ | 0.018 | 2.89 | 886 |
+| CCAA — Canarias | +12.51 (score) | 0.025 ✅ | — | — | 886 |
+
+⚠️ Note: Island β uses calima_ordinal (0–3 integer); Provincial/CCAA β uses calima_score [0–1]. Not directly comparable in magnitude.
+
 **Next steps for publication:**
-1. Review project structure and documentation completeness
-2. Compile write-up / analytical summary
-3. Organize figures and tables for presentation
-4. Finalize repository structure for public release
-5. Peer review / final verification before publication
+1. Phase 7: Multi-scale synthesis (insular vs provincial vs CCAA narrative)
+2. Review interpretation: Why no Las Palmas signal at provincial level?
+3. Proxy v3 validation (2004–2025) against DAI
+4. Organize figures and tables for final presentation
+5. Finalize repository structure for public release
+6. Peer review / final verification before publication
 
 ## License
 

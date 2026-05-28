@@ -1,0 +1,6 @@
+Scale,Model,β_calima,p,R2,DW,n,Significant
+Island — Tenerife,OLS+lag (ordinal),2.93,<0.001,0.464,2.3,522,True
+Island — Gran Canaria,OLS+lag (ordinal),1.77,<0.001,0.486,2.36,522,True
+Province — SC Tenerife,P2 HC3 (score),7.483,0.0142,0.024,2.98,886,True
+Province — Las Palmas,P2 HC3 (score),2.497,0.4286,0.018,2.89,886,False
+CCAA — Canarias,P2 HC3 (score),12.51,0.025,,,886,True
