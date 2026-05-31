@@ -612,6 +612,10 @@ Q1 (winter) is the only individually significant quarter (β=+1.866, p=0.046). Q
 | R² | 0.486 | 0.563 |
 | AUC proxy | 0.886 | 0.917 |
 
+### Lanzarote+Fuerteventura — Null Result (May 31, 2026)
+
+Proxy v5 calibrated locally for LZT+FTV (PM10 + vis, AUC=0.896, EPV=5 — exploratory). No calima-mortality signal at any lag (lag0 p=0.602, lag1 p=0.690, lag2 p=0.186). **Calima effect in Las Palmas province is confirmed as concentrated exclusively in Gran Canaria.** See `notebooks/lanzaftv_calima_analysis.ipynb`.
+
 4. **Smaller islands:** Gomera, La Palma, Lanzarote, Fuerteventura individually — would require Bayesian hierarchical modeling or pooled analysis to address low-n constraints.
 
 5. **Repo promotion:**
