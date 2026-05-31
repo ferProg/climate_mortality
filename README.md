@@ -125,12 +125,13 @@ climate_mortality/
 | 6 | Proxy v4 calibration — logistic regression, AUC 0.932 | ✅ Complete |
 | 7 | Regional master + regression — 6 islands aggregated, R²=0.746 | ✅ Complete |
 | 8 | Demographic normalization — deaths/100k, ISTAC Padrón 2009–2025 | ✅ Complete |
+| 9 | Las Palmas lag analysis — lag0/lag1/lag2 all non-significant; null result confirmed | ✅ Complete |
 
 ## Limitations
 
 - Weekly resolution limits temporal precision relative to daily studies
 - Autocorrelation addressed via `deaths_lag1` predictor (DW improved from ~0.8 to 2.30–2.55)
-- Las Palmas province shows no significant signal at provincial scale — signal appears concentrated in Gran Canaria island
+- Las Palmas province shows no significant signal at any lag (0–2 weeks) at provincial scale — null result robust across all specifications; signal concentrated in Gran Canaria island (β=+1.77, p<0.001)
 - CAP alerts available only from 2018; proxy calibration uses DAI + CAP combined
 - Some island-level variables have coverage gaps (Gomera PM10 45% nulls, interpolated)
 - All findings are observational; causal inference requires further study

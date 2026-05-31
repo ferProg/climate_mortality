@@ -41,8 +41,10 @@ ISLANDS = [
     "gran_canaria",
     "lanzarote",
     "fuerteventura",
+    "lanzaftv",
     "la_palma",
     "gomera",
+    "hierro",
 ]
 
 
@@ -84,12 +86,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--start-year",
         type=int,
-        required=True, 
+        required=True,
         help="Start year, e.g. 2016")
     parser.add_argument(
-        "--end-year", 
-        type=int, 
-        required=True, 
+        "--end-year",
+        type=int,
+        required=True,
         help="End year, e.g. 2025")
 
     parser.add_argument(
@@ -175,6 +177,52 @@ def read_concat_weekly(paths: List[Path], source_name: str) -> pd.DataFrame:
     return out
 
 
+def build_lanzaftv_cap(processed_dir: Path) -> pd.DataFrame:
+    """
+    lanzaftv has no own CAP feed. Build a proxy by reading lanzarote + fuerteventura
+    cap files and averaging their numeric columns per week_start.
+    """
+    lzt_paths = find_all_matches(
+        processed_dir / "lanzarote" / "cap",
+        "cap_weekly_lzt_*.parquet",
+        "cap(lzt)",
+    )
+    ftv_paths = find_all_matches(
+        processed_dir / "fuerteventura" / "cap",
+        "cap_weekly_ftv_*.parquet",
+        "cap(ftv)",
+    )
+
+    lzt = read_concat_weekly(lzt_paths, "cap(lzt)")
+    ftv = read_concat_weekly(ftv_paths, "cap(ftv)")
+
+    merged = lzt.merge(ftv, on="week_start", how="outer", suffixes=("_lzt", "_ftv"))
+
+    # average numeric columns; reconstruct expected cap column names
+    cap_cols = [
+        "cap_heat_level_max_week",
+        "cap_dust_level_max_week",
+        "cap_heat_yellow_plus_week",
+        "cap_dust_yellow_plus_week",
+        "cap_coverage_week",
+    ]
+    out = merged[["week_start"]].copy()
+    for col in cap_cols:
+        lzt_col = f"{col}_lzt"
+        ftv_col = f"{col}_ftv"
+        if lzt_col in merged.columns and ftv_col in merged.columns:
+            out[col] = merged[[lzt_col, ftv_col]].mean(axis=1)
+        elif lzt_col in merged.columns:
+            out[col] = merged[lzt_col]
+        elif ftv_col in merged.columns:
+            out[col] = merged[ftv_col]
+        else:
+            out[col] = float("nan")
+
+    out = out.sort_values("week_start").reset_index(drop=True)
+    return out
+
+
 def build_paths(island: str, processed_dir: Path, interim_dir: Path) -> Dict[str, object]:
     code = island_code(island)
 
@@ -199,7 +247,8 @@ def build_paths(island: str, processed_dir: Path, interim_dir: Path) -> Dict[str
             f"weekly_{code}_*.parquet",
             "air_quality",
         ),
-        "cap": find_all_matches(
+        # lanzaftv has no own CAP — marker value; resolved in build_master
+        "cap": None if island == "lanzaftv" else find_all_matches(
             processed_dir / island / "cap",
             f"cap_weekly_{code}_*.parquet",
             "cap",
@@ -312,7 +361,7 @@ def validate_master(df: pd.DataFrame, analysis_start: pd.Timestamp, analysis_end
             f"Unexpected number of weeks: got {len(df)}, expected {len(expected_weeks)} "
             f"for {analysis_start.date()}..{analysis_end.date()}"
         )
-    
+
 
 def build_master(
     island: str,
@@ -332,7 +381,13 @@ def build_master(
     weather = read_concat_weekly(paths["weather"], "weather")
     visibility = read_concat_weekly(paths["visibility"], "visibility")
     airq = read_concat_weekly(paths["airq"], "airq")
-    cap = read_concat_weekly(paths["cap"], "cap")
+
+    if paths["cap"] is None:
+        # lanzaftv: build proxy cap from lanzarote + fuerteventura
+        print(f"[build_master] {island}: no own CAP feed — building proxy from lanzarote+fuerteventura")
+        cap = build_lanzaftv_cap(processed_dir)
+    else:
+        cap = read_concat_weekly(paths["cap"], "cap")
 
     deaths = clip_to_analysis(deaths, analysis_start, analysis_end)
     weather = clip_to_analysis(weather, analysis_start, analysis_end)
@@ -408,13 +463,6 @@ def main() -> None:
     analysis_start, analysis_end = resolve_analysis_window(args.start_year, args.end_year)
     processed_dir = Path(args.processed_dir)
     interim_dir = Path(args.interim_dir)
-
-    ######TEMPORAL#####
-    print("ISLAND:", args.island)
-    print("START YEAR:", args.start_year)
-    print("END YEAR:", args.end_year)
-    print("ANALYSIS START:", analysis_start)
-    print("ANALYSIS END:", analysis_end)
 
     if args.all:
         outputs: List[Path] = []

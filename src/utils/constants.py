@@ -4,6 +4,7 @@ ISLAND_CODES = {
     "gran_canaria": "gcan",
     "lanzarote": "lzt",
     "fuerteventura": "ftv",
+    "lanzaftv": "lztftv",
     "la_palma": "lpa",
     "gomera": "gom",
     "hierro": "hie",

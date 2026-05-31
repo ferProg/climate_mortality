@@ -46,6 +46,14 @@ ISLAND_CONFIG = {
         "code": "hie",
         "area": [28.5, -18.5, 27.0, -17.0],
     },
+    "gomera_hierro": {
+        "code": "hie",
+        "area": [29.0, -18.5, 27.0, -16.5],  # combined bbox covering both islands
+    },
+    "lanzarote_fuerteventura": {
+        "code": "lztftv",
+        "area": [30.0, -15.0, 27.5, -13.0],  # combined bbox covering both islands
+    },
 }
 
 # EAC4 variable names -> output column names (µg/m³ after unit conversion)

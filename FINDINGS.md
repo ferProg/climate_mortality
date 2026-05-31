@@ -553,7 +553,7 @@ The following extensions were identified during project development but deferred
 
 1. ~~**Mortality rate specification**~~ ✅ **Completed May 31, 2026** — `deaths_per_100k` implemented in `build_master_regional.py` and validated. See *Normalized Model* section above.
 
-2. **Lagged calima for Las Palmas:** Provincial Las Palmas P2 is not significant contemporaneously (p=0.429). Testing lag1/lag2 calima may reveal a delayed effect consistent with inflammatory response mechanism.
+2. ~~**Lagged calima for Las Palmas:**~~ ✅ **Completed May 31, 2026** — Lag0, Lag1, Lag2, and combined Lag0+1+2 all non-significant (p=0.333–0.624). Lag1/Lag2 coefficients are negative, inconsistent with inflammatory response hypothesis. Las Palmas null result is robust across all specifications. Signal remains concentrated in Gran Canaria island (β=+1.77, p<0.001). See `provinces/model_p1_p2_provinces.ipynb`.
 
 3. **Temporal stability analysis:** Test whether the calima-mortality association has strengthened over 2009–2025, given increasing frequency/intensity of Saharan dust events.
 

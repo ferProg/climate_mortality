@@ -246,12 +246,20 @@ def read_station_sheet(excel_path: Path, sheet_name: str) -> pd.DataFrame:
         "FECHA": "date",
         "Hora": "hour",
         "SO2": "SO2",
+        "SO2 ug/m3": "SO2",
         "NO": "NO",
         "NO2": "NO2",
+        "NO2 ug/m3": "NO2",
         "PM10": "PM10",
+        "PM10 ug/m3": "PM10",
+        "PM10 Ug/m3": "PM10",
         "PM2,5": "PM2.5",
         "PM2.5": "PM2.5",
+        "PM2,5 ug/m3": "PM2.5",
+        "PM2.5 ug/m3": "PM2.5",
         "O3": "O3",
+        "O3 ug/m3": "O3",
+        "CO mg/m3": "CO",
     }
 
     df = df.rename(columns=rename_map)
