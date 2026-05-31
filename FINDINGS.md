@@ -557,6 +557,61 @@ The following extensions were identified during project development but deferred
 
 3. **Temporal stability analysis:** Test whether the calima-mortality association has strengthened over 2009–2025, given increasing frequency/intensity of Saharan dust events.
 
+---
+
+## Gran Canaria Deep Dive (May 31, 2026)
+
+**Notebook:** `notebooks/gran_canaria_deep_dive.ipynb`
+
+### Proxy v5 — Island-Specific Calibration
+
+| Item | Value |
+|---|---|
+| Calibration period | 2018-06-18 → 2022-03-14 (196 weeks) |
+| Ground truth | DAI flag OR CAP dust ≥ amarillo |
+| Features | PM10, PM2.5, vis_min_m_week |
+| Method | Logistic regression (class_weight='balanced') |
+| **AUC** | **0.917** (vs v2: 0.886) |
+| Top coefficient | vis_min_m_week (-3.84) — strongest discriminator |
+| Encoding | Quartile-based ordinal [0–3] — fixed cuts (0.25/0.50/0.75) lose signal due to score distribution shape |
+
+### Regression Results (Model 3, Proxy v5)
+
+`deaths_week ~ calima_v5_q + temp_c_mean + deaths_lag1` (OLS HC3, n=884)
+
+| Predictor | β | p |
+|---|---|---|
+| calima_v5_q | +1.193 | 0.011 * |
+| temp_c_mean | -0.914 | <0.001 *** |
+| deaths_lag1 | +0.697 | <0.001 *** |
+
+**R²=0.563 | DW=2.498 ✅ | BP p=0.616 ✅**
+
+### Lag Analysis
+
+| Lag | β | p | |
+|---|---|---|---|
+| Lag 0 (contemporaneous) | +1.193 | 0.011 | ✅ acute effect |
+| Lag 1 (1 week) | +0.775 | 0.110 | — |
+| Lag 2 (2 weeks) | +0.983 | 0.039 | ✅ delayed inflammatory response |
+
+Combined lag0+1+2: lag0 survives (p=0.036); lag1/lag2 lose significance due to inter-lag collinearity.
+
+### Seasonality
+
+F-test calima×quarter: **p=0.752** — no significant seasonal interaction.  
+Q1 (winter) is the only individually significant quarter (β=+1.866, p=0.046). Q3 (summer) near-zero (β=+0.111, p=0.904).  
+**Conclusion:** Calima is a year-round risk factor in Gran Canaria — consistent with regional findings.
+
+### Comparison v2 vs v5
+
+| Metric | Proxy v2 | Proxy v5 |
+|---|---|---|
+| β calima | +1.77 | +1.19 |
+| p-value | <0.001 | 0.011 |
+| R² | 0.486 | 0.563 |
+| AUC proxy | 0.886 | 0.917 |
+
 4. **Smaller islands:** Gomera, La Palma, Lanzarote, Fuerteventura individually — would require Bayesian hierarchical modeling or pooled analysis to address low-n constraints.
 
 5. **Repo promotion:**
