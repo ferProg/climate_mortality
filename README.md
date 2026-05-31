@@ -241,7 +241,7 @@ Start from the island-level analyses:
 
 Each island contains a dedicated notebook and summary.
 
-## Phases (updated 2026-05-28)
+## Phases (updated 2026-05-31)
 
 **Phase 1 — Island-level EDA:** ✅ Complete (Apr 26)
 - 6 islands, Calima Proxy v2 (AUC 0.886), consistent methodology across islands
@@ -275,9 +275,27 @@ Each island contains a dedicated notebook and summary.
 - Notebook: `provinces/model_p1_p2_provinces.ipynb`
 - Figures: `reports/provinces/figures/` | Tables: `reports/provinces/tables/`
 
+**Phase 7 — Proxy v4 + Regional Master + Regional Regression:** ✅ Complete (May 31, 2026)
+- **Calima Proxy v4** calibrated via logistic regression against DAI (Heliyon) + CAP (AEMET) ground truth
+  - Variables: PM10 + PM2.5 + vis_min_m_week (3 variables vs 5 in v2/v3)
+  - Calibration window: 2009–2022 (92 positive events, DAI reliable + CAP from 2018)
+  - AUC = **0.932** (vs 0.886 v2, 0.900 v3) — best proxy to date
+  - Coefficients: vis_min_m_week (-1.376) > PM10 (+0.799) > PM2.5 (+0.682)
+  - Config: `data/processed/regional/proxy_v4_config.json`
+- **Regional master** built from 6 islands (TFE, GC, lanzaftv, LPA, GOM, HIE)
+  - Aggregation: simple mean for physical variables, direct sum for deaths
+  - `master_regional_2004_2025.parquet` (1149 weeks) + `master_regional_2009_2025.parquet` (887 weeks)
+  - Scripts: `src/master/build_calibration_dataset.py`, `src/master/build_master_regional.py`
+  - QA: `src/qa/audit_master_regional.py` — 0 duplicate weeks, 0 missing weeks ✅
+- **Regional regression** (OLS HC3 robust):
+  - Model: `deaths_week ~ calima_ordinal + temp_c_mean + deaths_lag1`
+  - **β calima = +3.51 muertes/semana**, p = 0.001 ✅, R² = 0.746, DW = 2.550
+  - Heteroscedasticity corrected with HC3 robust SE
+  - Notebook: `CCAA/regression/regression_regional.ipynb`
+
 ## Current status and next steps
 
-**🟢 PROJECT PHASE: WEEK 10 PROVINCIAL REGRESSION COMPLETE (as of May 28, 2026)**
+**🟢 PROJECT PHASE: WEEK 11 REGIONAL REGRESSION COMPLETE (as of May 31, 2026)**
 
 Analytical work progress (Week 9 — Climate Mortality v2 Regional Scope):
 
@@ -379,16 +397,16 @@ Analytical work progress (Week 9 — Climate Mortality v2 Regional Scope):
 | Province — SC Tenerife | +7.48 (score) | 0.014 ✅ | 0.024 | 2.98 | 886 |
 | Province — Las Palmas | +2.50 (score) | 0.429 ❌ | 0.018 | 2.89 | 886 |
 | CCAA — Canarias | +12.51 (score) | 0.025 ✅ | — | — | 886 |
+| **Regional v4 — Canarias** | **+3.51 (ordinal)** | **0.001 ✅** | **0.746** | **2.550** | **886** |
 
-⚠️ Note: Island β uses calima_ordinal (0–3 integer); Provincial/CCAA β uses calima_score [0–1]. Not directly comparable in magnitude.
+⚠️ Note: Island β uses calima_ordinal (0–3 integer); Provincial/CCAA β uses calima_score [0–1]. Regional v4 uses calima_ordinal on the sum of all islands — not directly comparable in magnitude with insular β, but direction and significance are consistent.
 
 **Next steps for publication:**
-1. Phase 7: Multi-scale synthesis (insular vs provincial vs CCAA narrative)
+1. Update mortality_rate specification (deaths/100k) to control for demographic growth
 2. Review interpretation: Why no Las Palmas signal at provincial level?
-3. Proxy v3 validation (2004–2025) against DAI
-4. Organize figures and tables for final presentation
-5. Finalize repository structure for public release
-6. Peer review / final verification before publication
+3. Organize figures and tables for final presentation
+4. Finalize repository structure for public release
+5. Peer review / final verification before publication
 
 ## License
 

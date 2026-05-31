@@ -1,7 +1,7 @@
 # VALIDATION.md
 
 > **Project:** climate_mortality  
-> **Last updated:** 2026-05-12  
+> **Last updated:** 2026-05-31  
 > **Purpose:** QA checklist, calima proxy validation, known limitations, and analytical caveats.
 
 ---
@@ -36,6 +36,40 @@
 | Accuracy | 0.860 |
 
 > Validation period: March 2018 – March 2022 (CAP + DAI overlap window).
+
+### Calima Proxy v4 — Regional (May 31, 2026)
+
+| Check | Result |
+|---|---|
+| Variables | PM10, PM2.5, vis_min_m_week |
+| Method | Logistic regression (calibrated vs DAI + CAP) |
+| Score range | 0.0002 – 1.0000 |
+| Level distribution covers all 4 categories | ✅ (no_calima 59%, possible 20%, probable 14%, intense 7%) |
+| Score monotonic by level | ✅ (mean: 0.016 → 0.087 → 0.293 → 0.857) |
+| **AUC (2009–2022)** | **0.932** |
+| Calibration window | 2009–2022 (92 positive events, DAI reliable + CAP from 2018) |
+| Ground truth | DAI (Heliyon) OR CAP dust ≥ level 2 (AEMET) |
+| Config file | `data/processed/regional/proxy_v4_config.json` |
+
+**Distribution analysis (2009–2022):**
+- PM10: calima p50=63.6 vs no-calima p50=27.0 µg/m³ — strongest signal
+- PM2.5: calima p50=23.3 vs no-calima p50=10.7 µg/m³ — strong signal
+- vis_min_m_week: calima p50=11,083m vs no-calima p50=20,333m — strong inverse signal
+- humidity, pressure, temperature: no discriminatory power at regional weekly scale
+
+**Variables excluded after EDA:** humidity_mean, pressure_hpa_mean, temp_c_mean, tmax_c_mean — distributions indistinguishable between calima and non-calima groups at regional scale.
+
+### Regional Master Dataset QA (May 31, 2026)
+
+| Check | master_regional_2004_2025 | master_regional_2009_2025 |
+|---|---|---|
+| Duplicate weeks | 0 ✅ | 0 ✅ |
+| Missing weeks | 0 ✅ | 0 ✅ |
+| deaths_week nulls | 1 (week 2003-12-29) ✅ | 0 ✅ |
+| Physical vars nulls | vis_min_m_week: 19 (1.7%) ⚠️ | vis_min_m_week: 19 (2.1%) ⚠️ |
+| deaths_week range | 159–467 ✅ | 159–467 ✅ |
+| Physical vars ranges | All within expected bounds ✅ | All within expected bounds ✅ |
+| proxy_reliable flag | 262 weeks = 0 (pre-2009) | 887 weeks = 1 ✅ |
 
 ### Regression Dataset (TFE + GC)
 

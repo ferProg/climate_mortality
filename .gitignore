@@ -1,31 +1,43 @@
-# Virtual env
+# =============================================================
+# climate_mortality — .gitignore
+# Public release: src/, CCAA/, reports/final/, docs
+# =============================================================
+
+# Virtual environment
 .venv/
+.env
+*.env
 
 # Python
 __pycache__/
 *.py[cod]
 *.pyo
+*.pyc
+**/__pycache__/
 
-# Jupyter
+# Jupyter checkpoints
 .ipynb_checkpoints/
+**/.ipynb_checkpoints/
 
-# Data not published
+# --- DATA (not published — reproduce via pipeline) ---
 data/raw/
 data/interim/
 data/processed/
 
-# Logs and notes
-logs/
-notes/
+# --- NOTEBOOKS (internal / exploratory) ---
+notebooks/legacy/
+notebooks/eda_playground/
+notebooks/regression_playground.ipynb
+notebooks/reports/
+notebooks/30_years_interval/
+notebooks/population_normalization_eda.ipynb
 
-# Jupyter
-notebooks/
-**/.ipynb_checkpoints/
-__pycache__/
-*.pyc
-.env
-*.env
+# --- SENSITIVITY ANALYSIS (not primary results) ---
+provinces/v4/
+reports/provinces/v4/
 
-# Internal project tracking (not for public repo)
+# --- INTERNAL PROJECT TRACKING ---
 ALERTS_STATUS.md
 SESSION_BLOCK_CLOSE_*.md
+logs/
+notes/
