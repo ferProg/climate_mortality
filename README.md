@@ -12,6 +12,8 @@ The repository is designed as a structured, reproducible analytical workflow: in
 
 | Document | Description |
 |---|---|
+| [Power BI Dashboard V2](dashboard/climate_mortality_V2_Final.pbix) | Exploratory Power BI dashboard for portfolio/reporting presentation |
+| [Dashboard screenshots](dashboard/screenshots/) | Static screenshots of the Power BI V2 dashboard   |
 | [FINDINGS.md](FINDINGS.md) | Full results — regression coefficients, effect sizes, diagnostics, all scales |
 | [REPRODUCIBILITY.md](REPRODUCIBILITY.md) | How to reproduce the full pipeline from source data |
 | [VALIDATION.md](VALIDATION.md) | Calima proxy v4 validation — AUC, CAP alignment, QA |
@@ -24,6 +26,50 @@ The repository is designed as a structured, reproducible analytical workflow: in
 Calima events — Saharan dust intrusions — are a recurrent feature of Canary Islands climate. This study investigates whether weeks with stronger calima conditions are associated with higher all-cause mortality across the six main islands, using official mortality (INE), meteorological (AEMET), and air quality data for the period 2009–2025.
 
 A composite calima proxy (v4, **AUC = 0.932**) was constructed via logistic regression from PM10, PM2.5, and visibility, calibrated against DAI (Heliyon) and CAP (AEMET) ground truth. Island-level analysis shows excess mortality of +17–18 deaths/week during intense calima episodes in Tenerife and Gran Canaria (η² ≈ 0.054–0.058, p < 0.001), with consistent per-capita effects across islands (+1.4–2.1 per 100,000). Multiple regression controlling for temperature and mortality autocorrelation confirms the calima effect independently at every geographic scale (island, province, CCAA). At regional scale: **β = +3.51 deaths/week per calima level** (p = 0.001, R² = 0.746). Demographic normalization (deaths/100k) confirms the signal is not explained by population growth (+7.1%, 2009–2025): **β = +0.18/100k/week** (p < 0.001, R² = 0.715). All findings are observational.
+
+## Power BI Dashboard V2 — Exploratory Reporting Layer
+
+This repository also includes a Power BI dashboard built as an exploratory reporting layer for portfolio presentation.
+
+The dashboard does not replace the statistical notebooks or regression analysis. Its purpose is to make the project easier to inspect visually by summarising the main weekly mortality patterns, environmental variables, calima proxy levels, temperature bands, and KPI definitions.
+
+The Power BI dashboard should be interpreted as **exploratory and descriptive**. It does not prove causality between calima, temperature, air quality and mortality.
+
+### Dashboard file
+
+[Download / open the Power BI dashboard](dashboard/Climate_Mortality_V2_Final.pbix)
+
+### Dashboard pages
+
+* **Overview** — general mortality KPIs, mortality trend over time, and deaths by island.
+* **Temperature & Calima** — average weekly deaths by calima proxy level and temperature band.
+* **Top weeks by deaths** — highest weekly mortality observations by island.
+* **KPI Documentation** — explanation of the main KPIs and methodological cautions.
+
+### Dashboard screenshots
+
+#### Overview
+
+![Overview](dashboard/screenshots/01_overview.png)
+
+#### Temperature & Calima
+
+![Temperature and Calima](dashboard/screenshots/02_temp_calima.png)
+
+#### Top weeks by deaths
+
+![Top weeks by deaths](dashboard/screenshots/03_top_weeks.png)
+
+#### KPI Documentation
+
+![KPI Documentation](dashboard/screenshots/04_kpi_documentation.png)
+
+### Dashboard interpretation note
+
+The dashboard uses absolute weekly deaths. It does not adjust mortality by population, age structure, seasonality, COVID-19 effects or other external factors. Therefore, comparisons between islands should be interpreted primarily as volume comparisons, not as relative mortality risk.
+
+The dashboard is intended to support exploratory analysis and communication. Any causal interpretation would require a more robust statistical design.
+
 
 ## Key Findings
 
@@ -97,7 +143,16 @@ The original authors are acknowledged for making these data available.
 ## Repository Structure
 
 ```
+
+```text
 climate_mortality/
+├── dashboard/
+│   ├── climate_mortality_V2_Final.pbix
+│   └── screenshots/
+│       ├── 01_overview.png
+│       ├── 02_temp_calima.png
+│       ├── 03_top_weeks.png
+│       └── 04_kpi_documentation.png
 ├── src/               → pipeline scripts (ingestion, aggregation, QA, master build)
 ├── CCAA/              → CCAA-level analysis and regression notebooks
 ├── islands/           → island-level EDA notebooks and READMEs
@@ -111,6 +166,7 @@ climate_mortality/
 ├── FINDINGS.md        → full regression results and diagnostics
 ├── REPRODUCIBILITY.md → pipeline reproduction guide
 └── VALIDATION.md      → proxy validation results
+
 ```
 
 ## Analysis Phases
