@@ -17,6 +17,7 @@ The repository is designed as a structured, reproducible analytical workflow: in
 | [FINDINGS.md](FINDINGS.md) | Full results — regression coefficients, effect sizes, diagnostics, all scales |
 | [REPRODUCIBILITY.md](REPRODUCIBILITY.md) | How to reproduce the full pipeline from source data |
 | [VALIDATION.md](VALIDATION.md) | Calima proxy v4 validation — AUC, CAP alignment, QA |
+| [V3 pending improvements](docs/v3_pending.md) | Future improvements and limitations to address in a possible V3 |
 | `CCAA/regression/regression_regional.ipynb` | Regional regression notebook (Canarias CCAA) |
 | `CCAA/regression/regression_tfe_gc_modeling.ipynb` | Island-level regression notebook (TFE + GC) |
 | `reports/final/FIGURES_INDEX.md` | Portfolio figures index with narrative order |
